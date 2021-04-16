@@ -7,9 +7,9 @@ from schemas.user_schema import User
 
 
 class Tile(BaseModel):
-    id : str = constr(min_length=21, max_length=21)
+    id : constr(min_length=21, max_length=21)
     base_price : PositiveFloat
-    location : str = constr(min_length=1, max_length=150)
+    location : constr(min_length=1, max_length=150) 
     available : int
     tile_class : int
     for_sale : int

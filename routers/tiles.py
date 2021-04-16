@@ -7,7 +7,7 @@ from services import tiles_service
 
 router = APIRouter(prefix='/tiles', tags=["Tiles"])
 
-@router.get("/", response_model=List[tile_schema.Tile], status_code=status.HTTP_200_OK)
+@router.post("/gettilesbyquadkeys", response_model=List[tile_schema.Tile], status_code=status.HTTP_200_OK)
 def get_tiles(quadkeys: List[str], db: Session = Depends(get_db)):
     if len(quadkeys) < 1 or quadkeys is None:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No quadkeys found in the request.")
