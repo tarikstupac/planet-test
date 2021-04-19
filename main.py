@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Depends
+from fastapi.middleware.cors import CORSMiddleware
 from routers import users, tiles, oauth2
 from sqlalchemy.orm import Session
 from database import SessionLocal, engine, get_db
@@ -9,7 +10,20 @@ from helpers import db_init
 base.Base.metadata.create_all(bind = engine)
 #db_init.seed_test_data()
 
-app = FastAPI()
+app = FastAPI(
+    title="PlanetIX API",
+    description="The API for the PlanetIX project, built with Fast API.",
+    version="1.0"
+)
+origins = ["*"]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"]
+)
 
 @app.get('/')
 def index():

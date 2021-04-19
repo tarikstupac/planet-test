@@ -28,11 +28,9 @@ def get_user_by_token(token: str = Depends(authentication.oauth2_scheme), db: Se
     try:
         payload = authentication.decode_token(token=token)
         username: str = payload.get("sub")
-        print(username)
         if username is None:
             raise credentials_exception
         token_data = token_schema.TokenData(username = username)
-        print(token_data)
     except JWTError:
         raise credentials_exception
     
@@ -41,13 +39,11 @@ def get_user_by_token(token: str = Depends(authentication.oauth2_scheme), db: Se
         raise credentials_exception
     if user.status == 0:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Inactive user")
-    print(user)
     return user
 
 
 @router.get("/me", response_model=user_schema.User,status_code=status.HTTP_200_OK)
 def get_current_user(current_user: user_schema.User = Depends(get_user_by_token)):
-    print("current_user")
     return current_user
 
 
