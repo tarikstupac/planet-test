@@ -1,5 +1,5 @@
 from fastapi import FastAPI, Depends
-from routers import users, tiles
+from routers import users, tiles, oauth2
 from sqlalchemy.orm import Session
 from database import SessionLocal, engine, get_db
 from models import base
@@ -18,3 +18,4 @@ def index():
 
 app.include_router(users.router)
 app.include_router(tiles.router)
+app.include_router(oauth2.router)
