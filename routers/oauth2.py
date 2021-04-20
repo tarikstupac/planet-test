@@ -2,6 +2,7 @@ from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import SQLAlchemyError
 from helpers.authentication import oauth2_scheme, verify_password, ACCESS_TOKEN_EXIPRE_MINUTES, create_access_token, get_password_hash
 from database import get_db
 from services import users_service
@@ -30,8 +31,8 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
     return {"access_token": access_token, "token_type": "bearer"}
 
 
-router.post('/register', response_model=token_schema.Token, status_code=status.HTTP_201_CREATED)
-def register(user: user_schema.User, db: Session = Depends(get_db)):
+@router.post('/register', response_model=token_schema.Token, status_code=status.HTTP_201_CREATED)
+def register(user: user_schema.UserCreate, db: Session = Depends(get_db)):
     user_exists = users_service.get_by_email(db, user.email)
     if user_exists:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
@@ -39,15 +40,11 @@ def register(user: user_schema.User, db: Session = Depends(get_db)):
     else:
         hashed_password = get_password_hash(user.password)
         user.password = hashed_password
-        try:
-            db.add(user)
-            db.commit()
-        except:
-            db.rollback()
-            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Something went wrong while adding this user.")
-        db.refresh(user)
+        user_db = users_service.insert_user(db,user)
+        if user_db is None:
+            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Something went wrong while creating the user!")
         access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXIPRE_MINUTES)
         access_token = create_access_token(data={"sub":user.email}, expires_delta=access_token_expires)
         return {"access_token": access_token, "token_type":"bearer"}
-        
+
 

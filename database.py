@@ -15,7 +15,7 @@ engine = create_engine(LOCAL_DB_URL, echo=True, pool_pre_ping=True, pool_use_lif
 Base = declarative_base(engine)
 
 #define session
-SessionLocal = sessionmaker(autocommit=True, bind=engine)
+SessionLocal = sessionmaker(autocommit=False, bind=engine)
 
 def get_db():
     db = SessionLocal()
