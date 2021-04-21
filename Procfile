@@ -1,1 +1,1 @@
-web: uvicorn --port=$PORT main:app
+web: uvicorn --port $PORT main:app
