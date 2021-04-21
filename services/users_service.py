@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 from models import users
 from schemas import user_schema
+from sqlalchemy.exc import SQLAlchemyError
 from helpers.authentication import get_password_hash
 
 
