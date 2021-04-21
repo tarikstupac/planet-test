@@ -1,5 +1,6 @@
 from fastapi import FastAPI, Depends
 import uvicorn
+import os
 from fastapi.middleware.cors import CORSMiddleware
 from routers import users, tiles, oauth2
 from sqlalchemy.orm import Session
@@ -36,4 +37,4 @@ app.include_router(tiles.router)
 app.include_router(oauth2.router)
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=os.environ.get("PORT", 5000))
