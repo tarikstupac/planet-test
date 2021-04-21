@@ -37,3 +37,17 @@ class UserCreate(BaseModel):
     class Config:
         orm_mode = True
 
+
+class UserEdit(BaseModel):
+    password : Optional[constr(regex="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$")]
+    first_name: Optional[constr(min_length=1, max_length=50)]
+    last_name: Optional[constr(min_length=1, max_length=50)]
+    phone: Optional[constr(regex='^\+(?:[0-9] ?){6,14}[0-9]$')]
+    flag : Optional[int]
+    map_style : Optional[int]
+    display_name: Optional[constr(min_length=1, max_length=20)]
+    country_id : Optional[int] 
+
+    class Config:
+        orm_mode = True
+

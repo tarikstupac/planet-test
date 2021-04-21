@@ -54,4 +54,13 @@ def get_user_by_id(user_id: int, db: Session = Depends(get_db)):
         raise HttpException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
     return user
 
+@router.put("/{user_id}", response_model=user_schema.User, status_code=status.HTTP_202_ACCEPTED)
+def update_user(user_id: int, user: user_schema.UserEdit, db: Session = Depends(get_db)):
+    user_exists = users_service.get_by_id(db, user_id)
+    if user_exists is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    else:
+        edited_user = users_service.update_user(db, user, user_id)
+        return edited_user
+
 

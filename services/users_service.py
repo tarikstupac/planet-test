@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 from models import users
 from schemas import user_schema
+from helpers.authentication import get_password_hash
 
 
 def get_all(db: Session, skip: int = 0, limit: int = 100):
@@ -34,3 +35,19 @@ def insert_user(db:Session, user: user_schema.UserCreate):
     except SQLAlchemyError as e:
         db.rollback()
         return None
+
+def update_user(db: Session, user: user_schema.UserEdit, user_id:int):
+    db_user = get_by_id(db, user_id)
+    update_data = user.dict(exclude_unset=True)
+    if "password" in update_data:
+        update_data["password"] = get_password_hash(user.password)
+    
+    for key,value in update_data.items():
+        setattr(db_user, key, value)
+
+    db.add(db_user)
+    db.commit()
+    db.refresh(db_user)
+    return db_user
+
+    
