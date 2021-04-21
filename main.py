@@ -10,7 +10,7 @@ from helpers import db_init
 
 #create db tables
 base.Base.metadata.create_all(bind = engine)
-db_init.seed_test_data()
+#db_init.seed_test_data()
 
 app = FastAPI(
     title="PlanetIX API",
