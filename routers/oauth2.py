@@ -35,7 +35,10 @@ def register(user: user_schema.UserCreate, db: Session = Depends(get_db)):
     user_exists = users_service.get_by_email(db, user.email)
     if user_exists:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
-        detail="There is already an account tied to this e-mail")
+        detail="There is already an account tied to this e-mail!")
+    if user_exists.username == user.username:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+        detail="There is already an account with this username!")
     else:
         hashed_password = get_password_hash(user.password)
         user.password = hashed_password

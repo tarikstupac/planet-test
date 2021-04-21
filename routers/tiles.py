@@ -13,14 +13,14 @@ def get_tiles(quadkeys: List[str], db: Session = Depends(get_db)):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No quadkeys found in the request.")
     tiles = tiles_service.get_tiles(db, quadkeys=quadkeys)
     if len(tiles) < 1 :
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No tiles with specified quadkeys found!")
+        raise HTTPException(status_code=status.HTTP_200_OK, detail="No tiles with specified quadkeys found!")
     return tiles
 
 @router.get("/{user_id}", response_model=List[tile_schema.Tile], status_code=status.HTTP_200_OK)
 def get_tiles_by_user_id(user_id: int, db: Session = Depends(get_db)):
     tiles = tiles_service.get_tiles_by_user_id(db, user_id=user_id)
     if tiles is None or len(tiles) < 1:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No tiles found for user id or user with the id doesn't exist!")
+        raise HTTPException(status_code=status.HTTP_200_OK, detail="No tiles found for user id or user with the id doesn't exist!")
     return tiles
 
 @router.post("/", status_code=status.HTTP_201_CREATED, response_description="Successfully added tiles!")
