@@ -60,6 +60,12 @@ def update_user(user_id: int, user: user_schema.UserEdit, db: Session = Depends(
     if user_exists is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
     else:
+        if user.old_password is None and user.password is not None:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="You need to enter your old password before entering the new one!")
+        if user.password is not None and user.old_password is not None:
+            psw_match = authentication.verify_password(user.old_password, user_exists.password)
+            if psw_match == False:
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Incorrect password!")        
         edited_user = users_service.update_user(db, user, user_id)
         return edited_user
 

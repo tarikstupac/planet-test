@@ -6,7 +6,6 @@ class User(BaseModel):
     id : int
     username: constr(min_length=3, max_length=20)
     email : EmailStr
-    password : SecretStr
     status : int
     first_name: constr(min_length=1, max_length=50)
     last_name: constr(min_length=1, max_length=50)
@@ -39,6 +38,7 @@ class UserCreate(BaseModel):
 
 
 class UserEdit(BaseModel):
+    old_password: Optional[constr(regex="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$")]
     password : Optional[constr(regex="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$")]
     first_name: Optional[constr(min_length=1, max_length=50)]
     last_name: Optional[constr(min_length=1, max_length=50)]
