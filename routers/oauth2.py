@@ -36,7 +36,7 @@ def register(user: user_schema.UserCreate, db: Session = Depends(get_db)):
     if user_exists:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
         detail="There is already an account tied to this e-mail!")
-    if user_exists.username == user.username:
+    if user_exists is not None and user_exists.username == user.username:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
         detail="There is already an account with this username!")
     else:
