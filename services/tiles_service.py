@@ -1,3 +1,5 @@
+from sqlalchemy import func
+from sqlalchemy.sql import label
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
 from typing import List
@@ -10,6 +12,9 @@ def get_tiles(db: Session, quadkeys : List[str]):
 
 def get_tiles_by_user_id(db: Session, user_id: int):
     return db.query(tiles.Tile).filter(tiles.Tile.user_id == user_id).all()
+
+def get_number_of_tiles_by_country(db: Session):
+    return db.query(tiles.Tile.country_id, label('Number of tiles', func.count(tiles.Tile.id))).group_by(tiles.Tile.country_id).all()
 
 def insert_tiles(db: Session, tiles_schema: List[tile_schema.Tile]):
     for tile in tiles_schema:

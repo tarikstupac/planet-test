@@ -3,9 +3,8 @@ from pydantic import BaseModel, constr
 
 class Country(BaseModel):
     id: str
-    name : str = constr(min_length=3, max_length=50)
+    name : constr(min_length=3, max_length=150)
     locked : int
-    code : str = constr(min_length=1, max_length=10)
     price_multiplier : float
 
 
