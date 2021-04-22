@@ -4,7 +4,7 @@ from sqlalchemy.ext.declarative import declarative_base
 import os
 
 DATABASE_URL = os.environ.get("DATABASE_URL")
-LOCAL_DB_URL = 'postgresql+psycopg2://test1:password@localhost:5432/planetix'
+#LOCAL_DB_URL = 'postgresql+psycopg2://test1:password@localhost:5432/planetix'
 conn_string = DATABASE_URL[11:]
 
 #create Postgres db engine

@@ -2,7 +2,8 @@ from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
-from helpers.authentication import oauth2_scheme, verify_password, ACCESS_TOKEN_EXIPRE_MINUTES, create_access_token, get_password_hash
+from helpers.authentication import oauth2_scheme, verify_password, ACCESS_TOKEN_EXIPRE_MINUTES, create_access_token
+from helpers.authentication import get_password_hash, create_refresh_token, verify_token, decode_refresh_token, decode_token
 from database import get_db
 from services import users_service
 from schemas import token_schema, user_schema
@@ -26,8 +27,9 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
     
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXIPRE_MINUTES)
     access_token = create_access_token(data={"sub": user_exists.email}, expires_delta= access_token_expires)
+    refresh_token = create_refresh_token(data={"sub":user_exists.email})
     
-    return {"access_token": access_token, "token_type": "bearer"}
+    return {"access_token": access_token, "token_type": "bearer", "refresh_token": refresh_token}
 
 
 @router.post('/register', response_model=token_schema.Token, status_code=status.HTTP_201_CREATED)
@@ -47,6 +49,35 @@ def register(user: user_schema.UserCreate, db: Session = Depends(get_db)):
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Something went wrong while creating the user!")
         access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXIPRE_MINUTES)
         access_token = create_access_token(data={"sub":user.email}, expires_delta=access_token_expires)
-        return {"access_token": access_token, "token_type":"bearer"}
+        refresh_token = create_refresh_token(data={"sub":user.email})
+        return {"access_token": access_token, "token_type":"bearer", "refresh_token": refresh_token}
 
+@router.post('/refresh', response_model=token_schema.Token, status_code=status.HTTP_200_OK)
+def refresh_token(token: token_schema.Token, db: Session = Depends(get_db)):
+    valid = verify_token(token.access_token)
+    if valid:
+        try:
+            payload = decode_token(token=token.access_token)
+            username: str = payload.get("sub")
+        except:
+            HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Something went wrong while decoding token")
+        user = users_service.get_by_email(db, username)
+        access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXIPRE_MINUTES)
+        access_token = create_access_token(data={"sub":user.email}, expires_delta=access_token_expires)
+        return {"access_token": access_token, "token_type":"bearer", "refresh_token":token.refresh_token}
+    else:
+        try:
+            payload = decode_refresh_token(token=token.refresh_token)
+            username: str = payload.get("sub")
+        except:
+            HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Something went wrong while decoding token")
+        if username is None:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid authentication credentials.")
+        user = users_service.get_by_email(db, username)
+        access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXIPRE_MINUTES)
+        access_token = create_access_token(data={"sub":user.email}, expires_delta=access_token_expires)
+        return {"access_token": access_token, "token_type": "bearer", "refresh_token": token.refresh_token}
+        
+
+    
 
