@@ -27,7 +27,9 @@ target_metadata = Base.metadata
 # ... etc.
 
 def get_url():
-    return os.environ.get("DATABASE_URL")
+    os.environ.get("DATABASE_URL")
+    conn_string = DATABASE_URL[11:]
+    return 'postgresql+psycopg2://'+conn_string
 
 def run_migrations_offline():
     """Run migrations in 'offline' mode.
