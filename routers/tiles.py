@@ -11,7 +11,7 @@ router = APIRouter(prefix='/tiles', tags=["Tiles"])
 @router.get("/country", response_description=status.HTTP_200_OK)
 def get_tiles_by_country(db: Session = Depends(get_db)):
     result = tiles_service.get_number_of_tiles_by_country(db)
-    if result is None or len(result) < 1 :
+    if result is None or len(result.items()) < 1 :
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Couldn't get any tiles by country.")
     return json.dumps(result)
 
