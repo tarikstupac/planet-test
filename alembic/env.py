@@ -27,7 +27,7 @@ target_metadata = Base.metadata
 # ... etc.
 
 def get_url():
-    return os.getenv("DATABASE_URL")
+    return os.environ.get("DATABASE_URL")
 
 def run_migrations_offline():
     """Run migrations in 'offline' mode.
