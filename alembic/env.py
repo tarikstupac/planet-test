@@ -28,7 +28,11 @@ target_metadata = Base.metadata
 
 def get_url():
     DATABASE_URL = os.environ.get("DATABASE_URL")
-    conn_string = DATABASE_URL[11:]
+    LOCAL_DB_URL = 'postgresql+psycopg2://test1:password@localhost:5432/planetix'
+    if DATABASE_URL is not None:
+        conn_string = DATABASE_URL[11:]
+    else:
+        return LOCAL_DB_URL
     return 'postgresql+psycopg2://'+conn_string
 
 def run_migrations_offline():
