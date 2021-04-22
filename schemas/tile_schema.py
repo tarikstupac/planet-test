@@ -13,8 +13,9 @@ class Tile(BaseModel):
     available : int
     tile_class : int
     for_sale : int
+    user_flag : Optional[str]
     date_changed : Optional[datetime]
-    country_id : int
+    country_id : str
     user_id : int
     
 

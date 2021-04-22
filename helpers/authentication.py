@@ -17,12 +17,6 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
 
 def verify_password(plain_password, hashed_password):
-    #CHANGE THIS PART AFTER TESTING
-    # currently fetches plain string password from db and hashes it
-    if hashed_password == 'test123':
-        psw_hash = get_password_hash(hashed_password)
-    else:
-        psw_hash = hashed_password
     return pwd_context.verify(plain_password, psw_hash)
 
 def get_password_hash(password):

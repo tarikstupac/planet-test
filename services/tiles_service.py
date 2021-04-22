@@ -20,6 +20,7 @@ def insert_tiles(db: Session, tiles_schema: List[tile_schema.Tile]):
             available=tile.available,
             tile_class=tile.tile_class,
             for_sale=tile.for_sale,
+            user_flag= tile.user_flag,
             date_changed=tile.date_changed,
             country_id=tile.country_id,
             user_id=tile.user_id

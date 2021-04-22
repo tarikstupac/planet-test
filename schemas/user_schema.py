@@ -13,7 +13,7 @@ class User(BaseModel):
     flag : Optional[int]
     map_style : Optional[int]
     display_name: constr(min_length=1, max_length=20)
-    country_id : int 
+    country_id : str 
     country : Country
 
     class Config:
@@ -31,7 +31,7 @@ class UserCreate(BaseModel):
     flag : Optional[int]
     map_style : Optional[int]
     display_name: Optional[constr(min_length=1, max_length=20)]
-    country_id : int 
+    country_id : str 
 
     class Config:
         orm_mode = True
@@ -46,7 +46,7 @@ class UserEdit(BaseModel):
     flag : Optional[int]
     map_style : Optional[int]
     display_name: Optional[constr(min_length=1, max_length=20)]
-    country_id : Optional[int] 
+    country_id : Optional[str] 
 
     class Config:
         orm_mode = True

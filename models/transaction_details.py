@@ -23,6 +23,3 @@ class TransactionDetail(Base):
     def __repr__(self):
         return """<TransactionDetail(unit_price'{0}', transaction_id'{1}', tile_id'{2}'>""".format(
             self.unit_price, self.transaction_id, self.tile_id)
-
-
-Base.metadata.create_all()

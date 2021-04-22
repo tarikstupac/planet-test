@@ -3,14 +3,7 @@ import uvicorn
 import os
 from fastapi.middleware.cors import CORSMiddleware
 from routers import users, tiles, oauth2
-from sqlalchemy.orm import Session
-from database import SessionLocal, engine, get_db
-from models import base
-from helpers import db_init
 
-#create db tables
-base.Base.metadata.create_all(bind = engine)
-#db_init.seed_test_data()
 
 app = FastAPI(
     title="PlanetIX API",

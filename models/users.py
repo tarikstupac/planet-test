@@ -18,7 +18,7 @@ class User(Base):
     flag = Column(SmallInteger)
     map_style = Column(SmallInteger)
     display_name = Column(String(20))
-    country_id = Column(Integer, ForeignKey('countries.id'), nullable=False)
+    country_id = Column(String, ForeignKey('countries.id'), nullable=False)
     country = relationship("Country", backref="users")
 
     def __init__(self, username, email, password, status, first_name, last_name, phone, flag, map_style, display_name, country_id):
@@ -40,6 +40,3 @@ class User(Base):
             display_name'{9}', country_id'{10}'>""".format(self.username, self.email,
             self.password, self.status, self.first_name, self.last_name, self.phone,
             self.flag, self.map_style, self.display_name, self.country_id)
-
-
-Base.metadata.create_all()

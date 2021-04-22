@@ -31,5 +31,3 @@ class Transaction(Base):
             self.date_created, self.date_processed, self.status, self.total_price, self.total_tiles,
             self.user_id)
 
-
-Base.metadata.create_all()
