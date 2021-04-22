@@ -46,7 +46,7 @@ def register(user: user_schema.UserCreate, db: Session = Depends(get_db)):
         user.password = hashed_password
         user_db = users_service.insert_user(db,user)
         if user_db is None:
-            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Something went wrong while creating the user!")
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Something went wrong while creating the user!")
         access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXIPRE_MINUTES)
         access_token = create_access_token(data={"sub":user.email}, expires_delta=access_token_expires)
         refresh_token = create_refresh_token(data={"sub":user.email})
