@@ -15,7 +15,7 @@ class User(Base):
     first_name = Column(String(50), nullable=False)
     last_name = Column(String(50), nullable=False)
     phone = Column(String(30))
-    flag = Column(SmallInteger)
+    flag = Column(String(10), nullable = True)
     map_style = Column(SmallInteger)
     display_name = Column(String(20))
     country_id = Column(String, ForeignKey('countries.id'), nullable=False)
