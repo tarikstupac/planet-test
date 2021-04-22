@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Depends
+from fastapi.responses import RedirectResponse
 import uvicorn
 import os
 from fastapi.middleware.cors import CORSMiddleware
@@ -22,8 +23,8 @@ app.add_middleware(
 
 @app.get('/')
 def index():
-    return {"Access /docs or /redoc to view API documentation!"}
-#place static routes (/user/inactive)  above dynamic routes (/user/{id}) 
+    response = RedirectResponse("/docs")
+    return response
 
 app.include_router(users.router)
 app.include_router(tiles.router)
