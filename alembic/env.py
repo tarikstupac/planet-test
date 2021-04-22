@@ -27,7 +27,7 @@ target_metadata = Base.metadata
 # ... etc.
 
 def get_url():
-    os.environ.get("DATABASE_URL")
+    DATABASE_URL = os.environ.get("DATABASE_URL")
     conn_string = DATABASE_URL[11:]
     return 'postgresql+psycopg2://'+conn_string
 
