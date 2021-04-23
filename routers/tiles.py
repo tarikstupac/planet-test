@@ -3,9 +3,9 @@ from sqlalchemy.orm import Session
 from typing import List
 from database import get_db
 from schemas import tile_schema
-from services import tiles_service, country_service
-import json
-import time
+from services import tiles_service, country_service, users_service
+from helpers import authentication
+from routers.oauth2 import check_credentials
 
 router = APIRouter(prefix='/tiles', tags=["Tiles"])
 
@@ -40,7 +40,12 @@ def get_tiles_by_user_id(user_id: int, db: Session = Depends(get_db)):
     return tiles
 
 @router.get("/{user_id}/country", status_code=status.HTTP_200_OK)
-def get_tiles_for_user_by_country(user_id: int, db: Session = Depends(get_db)):
+def get_tiles_for_user_by_country(user_id: int, db: Session = Depends(get_db), token: str = Depends(authentication.oauth2_scheme)):
+    token_data = check_credentials(token)
+    user = users_service.get_by_email(db, token_data.username)
+    if user.id != user_id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You do not have required permissions for this action!")
+    
     tiles_by_country = []
     distinct_countries = tiles_service.get_distinct_countries(db, user_id=user_id)
     if distinct_countries is None or len(distinct_countries) < 1:

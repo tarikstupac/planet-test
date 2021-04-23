@@ -2,6 +2,7 @@ from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
+from jose import JWTError
 from helpers.authentication import oauth2_scheme, verify_password, ACCESS_TOKEN_EXIPRE_MINUTES, create_access_token
 from helpers.authentication import get_password_hash, create_refresh_token, verify_token, decode_refresh_token, decode_token
 from database import get_db
@@ -78,6 +79,20 @@ def refresh_token(token: token_schema.Token, db: Session = Depends(get_db)):
         access_token = create_access_token(data={"sub":user.email}, expires_delta=access_token_expires)
         return {"access_token": access_token, "token_type": "bearer", "refresh_token": token.refresh_token}
         
-
+def check_credentials(token: str = Depends(oauth2_scheme)):
+    credentials_exception = HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid authentication credentials",
+            headers={"WWW-Authenticate":"Bearer"}
+        )
+    try:
+        payload = decode_token(token=token)
+        username: str = payload.get("sub")
+        if username is None:
+            raise credentials_exception
+        token_data = token_schema.TokenData(username = username)
+        return token_data
+    except JWTError:
+        raise credentials_exception  
     
 

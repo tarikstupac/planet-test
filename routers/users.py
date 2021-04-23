@@ -2,10 +2,10 @@ from fastapi import APIRouter, Depends, status, HTTPException
 from typing import List
 from sqlalchemy.orm import Session
 from database import get_db
-from jose import JWTError
 from schemas import user_schema, token_schema
 from services import users_service
 from helpers import authentication
+from routers.oauth2 import check_credentials
 
 
 router = APIRouter(prefix='/users',tags=['Users'])
@@ -19,21 +19,10 @@ def get_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     return users
 
 
+
 def get_user_by_token(token: str = Depends(authentication.oauth2_scheme), db: Session = Depends(get_db)):
-    credentials_exception = HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid authentication credentials",
-            headers={"WWW-Authenticate":"Bearer"}
-        )
-    try:
-        payload = authentication.decode_token(token=token)
-        username: str = payload.get("sub")
-        if username is None:
-            raise credentials_exception
-        token_data = token_schema.TokenData(username = username)
-    except JWTError:
-        raise credentials_exception
-    
+    token_data = check_credentials(token)
+
     user = users_service.get_by_email(db, email= token_data.username)
     if user is None:
         raise credentials_exception
@@ -55,10 +44,13 @@ def get_user_by_id(user_id: int, db: Session = Depends(get_db)):
     return user
 
 @router.put("/{user_id}", response_model=user_schema.User, status_code=status.HTTP_202_ACCEPTED)
-def update_user(user_id: int, user: user_schema.UserEdit, db: Session = Depends(get_db)):
-    user_exists = users_service.get_by_id(db, user_id)
+def update_user(user_id: int, user: user_schema.UserEdit, db: Session = Depends(get_db), token: str = Depends(authentication.oauth2_scheme)):
+    token_data = check_credentials(token)
+    user_exists = users_service.get_by_email(db, token_data.username)
     if user_exists is None:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="User not found")
+    if user_exists.id != user_id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You do not have required permissions for this action!")
     else:
         if user.old_password is None and user.password is not None:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="You need to enter your old password before entering the new one!")
