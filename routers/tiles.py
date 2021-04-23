@@ -3,8 +3,9 @@ from sqlalchemy.orm import Session
 from typing import List
 from database import get_db
 from schemas import tile_schema
-from services import tiles_service
+from services import tiles_service, country_service
 import json
+import time
 
 router = APIRouter(prefix='/tiles', tags=["Tiles"])
 
@@ -15,7 +16,13 @@ def get_tiles_by_country(db: Session = Depends(get_db)):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Couldn't get any tiles by country.")
     country_list = [dict(result[i]).items() for i in range(0, len(result))]
     return country_list
-    
+
+@router.post("/", status_code=status.HTTP_201_CREATED, response_description="Successfully added tiles!")
+def insert_tiles(tiles: List[tile_schema.Tile], db: Session = Depends(get_db)):
+    if tiles is None or len(tiles) < 1:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No tiles supplied!")
+    tiles_service.insert_tiles(db, tiles)
+    time.sleep(3)
 
 @router.post("/gettilesbyquadkeys", response_model=List[tile_schema.Tile], status_code=status.HTTP_200_OK)
 def get_tiles(quadkeys: List[str], db: Session = Depends(get_db)):
@@ -33,8 +40,22 @@ def get_tiles_by_user_id(user_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=status.HTTP_200_OK, detail="No tiles found for user id or user with the id doesn't exist!")
     return tiles
 
-@router.post("/", status_code=status.HTTP_201_CREATED, response_description="Successfully added tiles!")
-def insert_tiles(tiles: List[tile_schema.Tile], db: Session = Depends(get_db)):
-    if tiles is None or len(tiles) < 1:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No tiles supplied!")
-    tiles_service.insert_tiles(db, tiles)
+@router.get("/{user_id}/country", status_code=status.HTTP_200_OK)
+def get_tiles_for_user_by_country(user_id: int, db: Session = Depends(get_db)):
+    tiles_by_country = []
+    distinct_countries = tiles_service.get_distinct_countries(db)
+    if distinct_countries is None or len(distinct_countries) < 1:
+         raise HTTPException(status_code=status.HTTP_200_OK, detail="No tiles found for user id or user with the id doesn't exist!")
+    for country in distinct_countries:
+        temp = country_service.get_by_id(db, country['country_id'])
+        tile_list = tiles_service.get_tiles_by_user_country(db, user_id, temp.id)
+        obj = {'id': temp.id, 'name' : temp.name,"tiles" : tile_list}
+        tiles_by_country.append(obj)
+    if tiles_by_country is None or len(tiles_by_country) < 1 :
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Can't fetch tiles by country for the given user")
+    return tiles_by_country
+    
+
+
+
+

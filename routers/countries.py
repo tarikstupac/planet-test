@@ -12,7 +12,7 @@ router = APIRouter(prefix='/countries',tags=['Countries'])
 def get_countries(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     countries = country_service.get_all(db, skip, limit)
     if countries is None or len(countries) < 1:
-        raise HTTPException(status_code=status.HTTP_200_OK, detail="No users found!")
+        raise HTTPException(status_code=status.HTTP_200_OK, detail="No countries found!")
     return countries
 
 @router.get("/{country_id}", response_model=country_schema.Country, status_code=status.HTTP_200_OK)

@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, List
 from pydantic import BaseModel, constr, PositiveFloat
 from datetime import datetime
 
@@ -21,3 +21,9 @@ class Tile(BaseModel):
 
     class Config:
         orm_mode = True
+
+
+class TileByCountry(BaseModel):
+    id: str
+    name: str
+    tiles: List

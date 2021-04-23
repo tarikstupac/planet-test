@@ -1,9 +1,9 @@
-from sqlalchemy import func
+from sqlalchemy import func, distinct, join
 from sqlalchemy.sql import label
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
 from typing import List
-from models import tiles
+from models import tiles, countries
 from schemas import tile_schema
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -14,7 +14,7 @@ def get_tiles_by_user_id(db: Session, user_id: int):
     return db.query(tiles.Tile).filter(tiles.Tile.user_id == user_id).all()
 
 def get_number_of_tiles_by_country(db: Session):
-    result = db.query(tiles.Tile.country_id, label('Number of tiles', func.count(tiles.Tile.id))).group_by(tiles.Tile.country_id).all()
+    result = db.query(tiles.Tile.country_id, countries.Country.name, label('number_of_tiles', func.count(tiles.Tile.id))).join(countries.Country).group_by(tiles.Tile.country_id, countries.Country.name).all()
     return result
 
 def insert_tiles(db: Session, tiles_schema: List[tile_schema.Tile]):
@@ -34,6 +34,13 @@ def insert_tiles(db: Session, tiles_schema: List[tile_schema.Tile]):
         db.add(db_tile)
     try:
         db.commit()
+        return True
     except SQLAlchemyError as e:
         db.rollback()
         raise HTTPException(status_code= status.HTTP_400_BAD_REQUEST, detail="Problem while adding tiles, duplicate or invalid quadkeys! or " + str(type(e)))
+
+def get_distinct_countries(db: Session):
+    return db.query(tiles.Tile.country_id).distinct().all()
+
+def get_tiles_by_user_country(db: Session, user_id: int, country_id: str):
+    return db.query(tiles.Tile).filter(tiles.Tile.user_id == user_id, tiles.Tile.country_id == country_id).all()
