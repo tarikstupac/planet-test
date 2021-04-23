@@ -18,6 +18,7 @@ def get_number_of_tiles_by_country(db: Session):
     return result
 
 def insert_tiles(db: Session, tiles_schema: List[tile_schema.Tile]):
+    db_tiles = []
     for tile in tiles_schema:
         db_tile = tiles.Tile(
             id=tile.id,
@@ -31,16 +32,18 @@ def insert_tiles(db: Session, tiles_schema: List[tile_schema.Tile]):
             country_id=tile.country_id,
             user_id=tile.user_id
         )
-        db.add(db_tile)
+        #db.add(db_tile)
+        db_tiles.append(db_tile)
     try:
+        db.bulk_save_objects(db_tiles)
         db.commit()
         return True
     except SQLAlchemyError as e:
         db.rollback()
         raise HTTPException(status_code= status.HTTP_400_BAD_REQUEST, detail="Problem while adding tiles, duplicate or invalid quadkeys! or " + str(type(e)))
 
-def get_distinct_countries(db: Session):
-    return db.query(tiles.Tile.country_id).distinct().all()
+def get_distinct_countries(db: Session, user_id: int):
+    return db.query(tiles.Tile.country_id).distinct().filter(tiles.Tile.user_id==user_id).all()
 
 def get_tiles_by_user_country(db: Session, user_id: int, country_id: str):
     return db.query(tiles.Tile).filter(tiles.Tile.user_id == user_id, tiles.Tile.country_id == country_id).all()

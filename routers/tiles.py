@@ -22,7 +22,6 @@ def insert_tiles(tiles: List[tile_schema.Tile], db: Session = Depends(get_db)):
     if tiles is None or len(tiles) < 1:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No tiles supplied!")
     tiles_service.insert_tiles(db, tiles)
-    time.sleep(3)
 
 @router.post("/gettilesbyquadkeys", response_model=List[tile_schema.Tile], status_code=status.HTTP_200_OK)
 def get_tiles(quadkeys: List[str], db: Session = Depends(get_db)):
@@ -43,7 +42,7 @@ def get_tiles_by_user_id(user_id: int, db: Session = Depends(get_db)):
 @router.get("/{user_id}/country", status_code=status.HTTP_200_OK)
 def get_tiles_for_user_by_country(user_id: int, db: Session = Depends(get_db)):
     tiles_by_country = []
-    distinct_countries = tiles_service.get_distinct_countries(db)
+    distinct_countries = tiles_service.get_distinct_countries(db, user_id=user_id)
     if distinct_countries is None or len(distinct_countries) < 1:
          raise HTTPException(status_code=status.HTTP_200_OK, detail="No tiles found for user id or user with the id doesn't exist!")
     for country in distinct_countries:
