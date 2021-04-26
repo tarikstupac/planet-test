@@ -14,7 +14,8 @@ def get_by_tiles(db: Session, skip: int = 0, limit: int = 100):
     return db.query(tiles.Tile)
 
 def get_tiles_count_by_user(db:Session, skip: int = 0, limit: int = 100):
-    return db.query(tiles.Tile.user_id, users.User.username, label('number_of_tiles', func.count(tiles.Tile.id))).join(users.User).group_by(tiles.Tile.user_id, users.User.username).order_by(func.count(tiles.Tile.id).desc()).all()
+    return db.query(tiles.Tile.user_id, users.User.username, users.User.flag, label('number_of_tiles', func.count(tiles.Tile.id))).join(users.User).\
+    group_by(tiles.Tile.user_id, users.User.username, users.User.flag).order_by(func.count(tiles.Tile.id).desc()).offset(skip).limit(limit).all()
 
 def get_by_id(db: Session, user_id: int):
     return db.query(users.User).filter(users.User.id == user_id).first()
