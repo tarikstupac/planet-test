@@ -36,6 +36,15 @@ def get_current_user(current_user: user_schema.User = Depends(get_user_by_token)
     return current_user
 
 
+@router.get("/leaderboard",status_code=status.HTTP_200_OK)
+def get_num_of_tiles_by_user(skip: int = 0, limit:int = 100, db: Session = Depends(get_db)):
+    result = users_service.get_tiles_count_by_user(db, skip, limit)
+    if result is None or len(result) < 1 :
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Couldn't get the leaderboards.")
+    leaderboards = [dict(result[i]).items() for i in range(0, len(result))]
+    return leaderboards
+
+
 @router.get("/{user_id}", response_model=user_schema.User, status_code=status.HTTP_200_OK)
 def get_user_by_id(user_id: int, db: Session = Depends(get_db)):
     user = users_service.get_by_id(db, user_id=user_id)

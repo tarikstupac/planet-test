@@ -1,5 +1,7 @@
 from sqlalchemy.orm import Session
-from models import users
+from sqlalchemy import func, join, desc
+from sqlalchemy.sql import label
+from models import users, tiles
 from schemas import user_schema
 from sqlalchemy.exc import SQLAlchemyError
 from helpers.authentication import get_password_hash
@@ -7,6 +9,12 @@ from helpers.authentication import get_password_hash
 
 def get_all(db: Session, skip: int = 0, limit: int = 100):
     return db.query(users.User).offset(skip).limit(limit).all()
+
+def get_by_tiles(db: Session, skip: int = 0, limit: int = 100):
+    return db.query(tiles.Tile)
+
+def get_tiles_count_by_user(db:Session, skip: int = 0, limit: int = 100):
+    return db.query(tiles.Tile.user_id, users.User.username, label('number_of_tiles', func.count(tiles.Tile.id))).join(users.User).group_by(tiles.Tile.user_id, users.User.username).order_by(func.count(tiles.Tile.id).desc()).all()
 
 def get_by_id(db: Session, user_id: int):
     return db.query(users.User).filter(users.User.id == user_id).first()
