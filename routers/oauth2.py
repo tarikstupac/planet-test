@@ -111,7 +111,7 @@ def reset_password(request: user_schema.UserPasswordReset, db: Session = Depends
     user = user_schema.UserEdit(password=request.password)
     users_service.update_user(db, user, user_exists.id)
     #TODO INVALIDATE TOKEN
-    return {"detal":"Password successfully changed, you will be redirected to the login page shortly."}
+    return {"detail":"Password successfully changed, you will be redirected to the login page shortly."}
 
     
 def check_credentials(token: str = Depends(oauth2_scheme)):
