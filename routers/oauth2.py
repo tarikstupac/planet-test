@@ -121,7 +121,7 @@ def reset_password(request: user_schema.UserPasswordReset, db: Session = Depends
     
 @router.post('/verifyaccount', status_code=status.HTTP_200_OK, response_description="Account successfully verified")
 def verify_account(request: user_schema.UserActivateAccount, db: Session = Depends(get_db)):
-   valid = verify_token(request.confirmation)
+    valid = verify_token(request.confirmation)
     if valid:
         try:
             payload = decode_token(token=request.confirmation)
