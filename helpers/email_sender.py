@@ -35,5 +35,28 @@ async def compose_email(user: user_schema.UserForgotPassword, password_reset_tok
     fm = FastMail(conf)
     await fm.send_message(password_reset_mail)
 
+async def activation_email(user: user_schema.UserActivateAccount, account_activate_token: str):
+    account_activation_link = FRONTEND_URL_DEV + "activate/{0}".format(account_activate_token)
+    template = """
+        <html>
+        <body>
+            <p>Your password reset link is : <a href='{0}'>{0}</a>. <br>
+            Please note it will expire in an hour.
+            </p>
+        </body>
+        </html>
+        """.format(account_activate_token)
+
+    account_activate_mail =  MessageSchema(
+    subject = "Account activation",
+    recipients = [user.email],
+    body = template,
+    subtype="html"
+    )
+
+    fm = FastMail(conf)
+    await fm.send_message(account_activate_mail)
+
+
 
 

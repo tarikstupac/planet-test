@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
-from jose import JWTError
+from jose.jws import 
 from helpers.authentication import oauth2_scheme, verify_password, ACCESS_TOKEN_EXIPRE_MINUTES, create_access_token
 from helpers.authentication import get_password_hash, create_refresh_token, verify_token, decode_refresh_token, decode_token
 from database import get_db
@@ -43,12 +43,18 @@ def register(user: user_schema.UserCreate, db: Session = Depends(get_db)):
     if user_exists is not None and user_exists.username == user.username:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
         detail="There is already an account with this username!")
+    if user.password != user.confirm_password:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+         detail="The passwords do not match!")
     else:
         hashed_password = get_password_hash(user.password)
         user.password = hashed_password
         user_db = users_service.insert_user(db,user)
         if user_db is None:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Something went wrong while creating the user!")
+
+        #replace this logic with account activation email in the future.
+        #Use activation_email fonction in email_sender.py and same logic from forgot password
         access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXIPRE_MINUTES)
         access_token = create_access_token(data={"sub":user.email}, expires_delta=access_token_expires)
         refresh_token = create_refresh_token(data={"sub":user.email})
@@ -110,10 +116,31 @@ def reset_password(request: user_schema.UserPasswordReset, db: Session = Depends
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Passwords don't match!")
     user = user_schema.UserEdit(password=request.password)
     users_service.update_user(db, user, user_exists.id)
-    #TODO INVALIDATE TOKEN
+    #TODO INVALIDATE TOKEN using redis caching
     return {"detail":"Password successfully changed, you will be redirected to the login page shortly."}
 
     
+@router.post('/verifyaccount', status_code=status.HTTP_200_OK, response_description="Account successfully verified")
+def verify_account(request: user_schema.UserActivateAccount, db: Session = Depends(get_db)):
+   valid = verify_token(request.confirmation)
+    if valid:
+        try:
+            payload = decode_token(token=request.confirmation)
+            username: str = payload.get("sub")
+        except:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Something went wrong while decoding token")
+    user_exists = users_service.get_by_email(db, username)
+    if user_exists is None: 
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="User doesn't exist!")
+    
+    user = users_service.activate_user(db, user_exists.id)
+
+    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXIPRE_MINUTES)
+    access_token = create_access_token(data={"sub":user.email}, expires_delta=access_token_expires)
+    refresh_token = create_refresh_token(data={"sub":user.email})
+    return {"access_token": access_token, "token_type":"bearer", "refresh_token": refresh_token}
+
+
 def check_credentials(token: str = Depends(oauth2_scheme)):
     credentials_exception = HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

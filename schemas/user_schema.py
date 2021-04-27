@@ -24,6 +24,7 @@ class UserCreate(BaseModel):
     username: constr(min_length=3, max_length=20)
     email : EmailStr
     password : constr(regex="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$")
+    confirm_password: constr(regex="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$")
     status : int = 1
     first_name: constr(min_length=1, max_length=50)
     last_name: constr(min_length=1, max_length=50)
@@ -60,4 +61,8 @@ class UserPasswordReset(BaseModel):
     confirmation: str
     password : constr(regex="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$")
     confirm_password : constr(regex="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$")
+
+
+class UserActivateAccount(BaseModel):
+    email: EmailStr
 

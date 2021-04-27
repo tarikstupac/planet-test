@@ -60,4 +60,13 @@ def update_user(db: Session, user: user_schema.UserEdit, user_id:int):
     db.refresh(db_user)
     return db_user
 
+def activate_user(db: Session, user_id: int):
+    db_user = get_by_id(db, user_id)
+    db_user.status = 1
+    db.add(db_user)
+    db.commit()
+    db.refresh(db_user)
+    return db_user
+
+
     
