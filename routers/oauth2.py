@@ -8,6 +8,7 @@ from helpers.authentication import get_password_hash, create_refresh_token, veri
 from database import get_db
 from services import users_service
 from schemas import token_schema, user_schema
+from helpers import email_sender
 
 router = APIRouter(tags=['Authentication'])
 
@@ -81,13 +82,38 @@ def refresh_token(token: token_schema.Token, db: Session = Depends(get_db)):
 
 
 @router.post('/forgotpassword', status_code=status.HTTP_200_OK, response_description="Reset link was sent to the entered e-mail.")
-def forgot_password(forgot_password: user_schema.UserForgotPassword , db: Session = Depends(get_db)):
+async def forgot_password(forgot_password: user_schema.UserForgotPassword , db: Session = Depends(get_db)):
     user_exists = users_service.get_by_email(db, forgot_password.email)
     if user_exists is None:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="There is no account tied to this email!")
     else:
+        password_reset_token_expires = timedelta(minutes=60)
+        password_reset_token = create_access_token(data={"sub":forgot_password.email}, expires_delta=password_reset_token_expires)
+
+        await email_sender.compose_email(forgot_password, password_reset_token)
         return {"detail":"Reset link was sent to the entered e-mail."}
         
+
+@router.post('/changepassword/', status_code=status.HTTP_202_ACCEPTED, response_description="Successfully reset password!")
+def reset_password(request: user_schema.UserPasswordReset, db: Session = Depends(get_db)):
+    valid = verify_token(request.confirmation)
+    if valid:
+        try:
+            payload = decode_token(token=request.confirmation)
+            username: str = payload.get("sub")
+        except:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Something went wrong while decoding token")
+    user_exists = users_service.get_by_email(db, username)
+    if user_exists is None: 
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="User doesn't exist!")
+    if request.password != request.confirm_password:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Passwords don't match!")
+    user = user_schema.UserEdit(password=request.password)
+    users_service.update_user(db, user, user_exists.id)
+    #TODO INVALIDATE TOKEN
+    return {"detal":"Password successfully changed, you will be redirected to the login page shortly."}
+
+    
 def check_credentials(token: str = Depends(oauth2_scheme)):
     credentials_exception = HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

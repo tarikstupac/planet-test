@@ -53,5 +53,11 @@ class UserEdit(BaseModel):
 
 
 class UserForgotPassword(BaseModel):
-    email: str
+    email: EmailStr
+
+
+class UserPasswordReset(BaseModel):
+    confirmation: str
+    password : constr(regex="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$")
+    confirm_password : constr(regex="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$")
 
