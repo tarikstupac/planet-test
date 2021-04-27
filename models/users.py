@@ -14,10 +14,10 @@ class User(Base):
     status = Column(SmallInteger, nullable=False)
     first_name = Column(String(50), nullable=False)
     last_name = Column(String(50), nullable=False)
-    phone = Column(String(30))
+    phone = Column(String(30), nullable = True)
     flag = Column(String(10), nullable = True)
     map_style = Column(SmallInteger)
-    display_name = Column(String(20))
+    display_name = Column(String(20), nullable = True)
     country_id = Column(String, ForeignKey('countries.id'), nullable=False)
     country = relationship("Country", backref="users")
 
