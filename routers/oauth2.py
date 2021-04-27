@@ -31,7 +31,7 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
     refresh_token = create_refresh_token(data={"sub":user_exists.email})
     
     return {"access_token": access_token, "token_type": "bearer", "refresh_token": refresh_token}
-
+    
 
 @router.post('/register', response_model=token_schema.Token, status_code=status.HTTP_201_CREATED)
 def register(user: user_schema.UserCreate, db: Session = Depends(get_db)):
@@ -78,6 +78,15 @@ def refresh_token(token: token_schema.Token, db: Session = Depends(get_db)):
         access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXIPRE_MINUTES)
         access_token = create_access_token(data={"sub":user.email}, expires_delta=access_token_expires)
         return {"access_token": access_token, "token_type": "bearer", "refresh_token": token.refresh_token}
+
+
+@router.post('/forgotpassword', status_code=status.HTTP_200_OK, response_description="Reset link was sent to the entered e-mail.")
+def forgot_password(forgot_password: user_schema.UserForgotPassword , db: Session = Depends(get_db)):
+    user_exists = users_service.get_by_email(db, forgot_password.email)
+    if user_exists is None:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="There is no account tied to this email!")
+    else:
+        return {"detail":"Reset link was sent to the entered e-mail."}
         
 def check_credentials(token: str = Depends(oauth2_scheme)):
     credentials_exception = HTTPException(

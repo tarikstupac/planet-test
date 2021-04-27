@@ -51,3 +51,7 @@ class UserEdit(BaseModel):
     class Config:
         orm_mode = True
 
+
+class UserForgotPassword(BaseModel):
+    email: str
+
