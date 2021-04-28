@@ -15,7 +15,7 @@ def get_tiles_by_user_id(db: Session, user_id: int):
 
 def get_number_of_tiles_by_country(db: Session):
     result = db.query(tiles.Tile.country_id, countries.Country.name, label('number_of_tiles', func.count(tiles.Tile.id))).\
-        join(countries.Country).group_by(tiles.Tile.country_id, countries.Country.name).all()
+        join(countries.Country).group_by(tiles.Tile.country_id, countries.Country.name).order_by(func.count(tiles.Tile.id)).desc()).all()
     return result
 
 def insert_tiles(db: Session, tiles_schema: List[tile_schema.Tile]):
