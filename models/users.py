@@ -14,14 +14,14 @@ class User(Base):
     status = Column(SmallInteger, nullable=False)
     first_name = Column(String(50), nullable=False)
     last_name = Column(String(50), nullable=False)
-    phone = Column(String(30), nullable = True)
-    flag = Column(String(10), nullable = True)
+    phone = Column(String(30), nullable=True)
+    flag = Column(String(10), nullable=True)
     map_style = Column(SmallInteger)
-    display_name = Column(String(20), nullable = True)
+    profile_image = Column(String(150), nullable=True)
     country_id = Column(String, ForeignKey('countries.id'), nullable=False)
     country = relationship("Country", backref="users")
 
-    def __init__(self, username, email, password, status, first_name, last_name, phone, flag, map_style, display_name, country_id):
+    def __init__(self, username: str, email: str, password: str, status: int, first_name: str, last_name: str, phone: str, flag: int, map_style: int, profile_image: str, country_id: str):
         self.username = username
         self.email = email
         self.password = password
@@ -31,12 +31,14 @@ class User(Base):
         self.phone = phone
         self.flag = flag
         self.map_style = map_style
-        self.display_name = display_name
+        self.profile_image = profile_image
         self.country_id = country_id
 
     def __repr__(self):
-            return """<User(username'{0}', email'{1}', password'{2}', status'{3}',
+        return """<User(username'{0}', email'{1}', password'{2}', status'{3}',
             first_name'{4}', last_name'{5}', phone'{6}', flag'{7}', map_style'{8}',
-            display_name'{9}', country_id'{10}'>""".format(self.username, self.email,
-            self.password, self.status, self.first_name, self.last_name, self.phone,
-            self.flag, self.map_style, self.display_name, self.country_id)
+            profile_image'{9}', country_id'{10}'>
+            """.format(self.username, self.email,
+                       self.password, self.status, self.first_name, self.last_name, self.phone,
+                       self.flag, self.map_style, self.profile_image, self.country_id)
+

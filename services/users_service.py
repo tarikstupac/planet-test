@@ -5,6 +5,7 @@ from models import users, tiles
 from schemas import user_schema
 from sqlalchemy.exc import SQLAlchemyError
 from helpers.authentication import get_password_hash
+from helpers.image_converter import save_image
 
 
 def get_all(db: Session, skip: int = 0, limit: int = 100):
@@ -34,7 +35,7 @@ def insert_user(db:Session, user: user_schema.UserCreate):
         phone=user.phone,
         flag=user.flag,
         map_style=user.map_style,
-        display_name=user.display_name,
+        profile_image=user.profile_image,
         country_id=user.country_id
     )
     try:
@@ -52,6 +53,9 @@ def update_user(db: Session, user: user_schema.UserEdit, user_id:int):
     if "password" in update_data:
         update_data["password"] = get_password_hash(user.password)
     
+    if "profile_image" in update_data:
+        update_data["profile_image"] = save_image(user.profile_image)
+        
     for key,value in update_data.items():
         setattr(db_user, key, value)
 

@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, status, HTTPException
 from typing import List
 from sqlalchemy.orm import Session
 from database import get_db
-from schemas import user_schema, token_schema
+from schemas import user_schema
 from services import users_service
 from helpers import authentication
 from routers.oauth2 import check_credentials
@@ -25,7 +25,7 @@ def get_user_by_token(token: str = Depends(authentication.oauth2_scheme), db: Se
 
     user = users_service.get_by_email(db, email= token_data.username)
     if user is None:
-        raise credentials_exception
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Wrong email or password!")
     if user.status == 0:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Inactive user")
     return user
@@ -49,7 +49,7 @@ def get_num_of_tiles_by_user(skip: int = 0, limit:int = 100, db: Session = Depen
 def get_user_by_id(user_id: int, db: Session = Depends(get_db)):
     user = users_service.get_by_id(db, user_id=user_id)
     if user is None:
-        raise HttpException(status_code=status.HTTP_200_OK, detail="User not found")
+        raise HTTPException(status_code=status.HTTP_200_OK, detail="User not found")
     return user
 
 @router.put("/{user_id}", response_model=user_schema.User, status_code=status.HTTP_202_ACCEPTED)
