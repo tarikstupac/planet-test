@@ -54,7 +54,8 @@ def update_user(db: Session, user: user_schema.UserEdit, user_id:int):
         update_data["password"] = get_password_hash(user.password)
     
     if "profile_image" in update_data:
-        update_data["profile_image"] = save_image(user.profile_image)
+       # update_data["profile_image"] = save_image(user.profile_image)
+       update_data["profile_image"] = 'https://thispersondoesnotexist.com/image'
         
     for key,value in update_data.items():
         setattr(db_user, key, value)
