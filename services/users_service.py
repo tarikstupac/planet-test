@@ -3,6 +3,7 @@ from sqlalchemy import func, join, desc
 from sqlalchemy.sql import label
 from models import users, tiles
 from schemas import user_schema
+from services import tiles_service
 from sqlalchemy.exc import SQLAlchemyError
 from helpers.authentication import get_password_hash
 from helpers.image_converter import save_image
@@ -50,12 +51,16 @@ def insert_user(db:Session, user: user_schema.UserCreate):
 def update_user(db: Session, user: user_schema.UserEdit, user_id:int):
     db_user = get_by_id(db, user_id)
     update_data = user.dict(exclude_unset=True)
+    update_tile_flags = False
     if "password" in update_data:
         update_data["password"] = get_password_hash(user.password)
     
     if "profile_image" in update_data:
        # update_data["profile_image"] = save_image(user.profile_image)
        update_data["profile_image"] = 'https://thispersondoesnotexist.com/image'
+
+    if "flag" in update_data:
+        update_tile_flags = True
         
     for key,value in update_data.items():
         setattr(db_user, key, value)
@@ -63,6 +68,8 @@ def update_user(db: Session, user: user_schema.UserEdit, user_id:int):
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
+    if update_tile_flags:
+        tiles_service.update_tile_flag(db, db_user.flag, db_user.id)
     return db_user
 
 def activate_user(db: Session, user_id: int):
