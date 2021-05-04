@@ -18,7 +18,11 @@ def get_tiles_by_country(db: Session = Depends(get_db)):
     return country_list
 
 @router.post("/", status_code=status.HTTP_201_CREATED, response_description="Successfully added tiles!")
-def insert_tiles(tiles: List[tile_schema.Tile], db: Session = Depends(get_db)):
+def insert_tiles(tiles: List[tile_schema.Tile], db: Session = Depends(get_db), token: str = Depends(authentication.oauth2_scheme)):
+    token_data = check_credentials(token)
+    user = users_service.get_by_email(db, token_data.username)
+    if user is None:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You do not have required permissions for this action!")
     if tiles is None or len(tiles) < 1:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No tiles supplied!")
     tiles_service.insert_tiles(db, tiles)
@@ -33,7 +37,11 @@ def get_tiles(quadkeys: List[str], db: Session = Depends(get_db)):
     return tiles
 
 @router.get("/{user_id}", response_model=List[tile_schema.Tile], status_code=status.HTTP_200_OK)
-def get_tiles_by_user_id(user_id: int, db: Session = Depends(get_db)):
+def get_tiles_by_user_id(user_id: int, db: Session = Depends(get_db), token: str = Depends(authentication.oauth2_scheme)):
+    token_data = check_credentials(token)
+    user = users_service.get_by_email(db, token_data.username)
+    if user.id != user_id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You do not have required permissions for this action!")
     tiles = tiles_service.get_tiles_by_user_id(db, user_id=user_id)
     if tiles is None or len(tiles) < 1:
         raise HTTPException(status_code=status.HTTP_200_OK, detail="No tiles found for user id or user with the id doesn't exist!")
