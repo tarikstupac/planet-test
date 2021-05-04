@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 from helpers.authentication import oauth2_scheme, verify_password, ACCESS_TOKEN_EXIPRE_MINUTES, create_access_token
 from helpers.authentication import get_password_hash, create_refresh_token, verify_token, decode_refresh_token, decode_token
 from database import get_db
+from jose import JWTError
 from services import users_service
 from schemas import token_schema, user_schema
 from helpers import email_sender

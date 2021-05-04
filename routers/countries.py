@@ -19,5 +19,5 @@ def get_countries(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)
 def get_country_by_id(country_id: str, db: Session = Depends(get_db)):
     country = country_service.get_by_id(db, country_id==country_id)
     if country is None:
-        raise HttpException(status_code=status.HTTP_200_OK, detail="Country not found")
+        raise HTTPException(status_code=status.HTTP_200_OK, detail="Country not found")
     return country
