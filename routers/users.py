@@ -6,9 +6,20 @@ from schemas import user_schema
 from services import users_service
 from helpers import authentication
 from routers.oauth2 import check_credentials
+from redis_conf import token_watcher as r
 
 
 router = APIRouter(prefix='/users',tags=['Users'])
+
+def check_token_validity(user_id: int, token:str):
+    if r.exists(f'{user_id}_access_token') != 0:
+        redis_token = r.get(f'{user_id}_access_token')
+        if redis_token.decode('utf-8') == token:
+            return True
+        else:
+            return False
+    else:
+        return False
 
 
 @router.get("/", response_model=List[user_schema.User], status_code=status.HTTP_200_OK)
@@ -26,6 +37,11 @@ def get_user_by_token(token: str = Depends(authentication.oauth2_scheme), db: Se
     user = users_service.get_by_email(db, email= token_data.username)
     if user is None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Wrong email or password!")
+
+    token_valid = check_token_validity(user.id, token)
+    if token_valid is False:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="You are not logged in or your session has expired!")
+    
     if user.status == 0:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Inactive user")
     return user
@@ -58,6 +74,11 @@ def update_user(user_id: int, user: user_schema.UserEdit, db: Session = Depends(
     user_exists = users_service.get_by_email(db, token_data.username)
     if user_exists is None:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="User not found")
+
+    token_valid = check_token_validity(user.id, token)
+    if token_valid is False:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="You are not logged in or your session has expired!")
+    
     if user_exists.id != user_id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You do not have required permissions for this action!")
     else:
