@@ -1,7 +1,9 @@
 from datetime import datetime, timedelta
+from os import stat
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
+from starlette.status import HTTP_400_BAD_REQUEST, HTTP_401_UNAUTHORIZED
 from helpers.authentication import oauth2_scheme, verify_password, ACCESS_TOKEN_EXIPRE_MINUTES, create_access_token
 from helpers.authentication import get_password_hash, create_refresh_token, verify_token, decode_refresh_token, decode_token
 from database import get_db
@@ -9,6 +11,7 @@ from jose import JWTError
 from services import users_service
 from schemas import token_schema, user_schema
 from helpers import email_sender
+from redis_conf import token_watcher as r
 
 router = APIRouter(tags=['Authentication'])
 
@@ -29,6 +32,8 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
     
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXIPRE_MINUTES)
     access_token = create_access_token(data={"sub": user_exists.email}, expires_delta= access_token_expires)
+    #add key to redis token watcher
+    r.setex(f'{user_exists.id}_access_token', timedelta(ACCESS_TOKEN_EXIPRE_MINUTES), access_token)
     refresh_token = create_refresh_token(data={"sub":user_exists.email})
     
     return {"access_token": access_token, "token_type": "bearer", "refresh_token": refresh_token}
@@ -57,6 +62,8 @@ def register(user: user_schema.UserCreate, db: Session = Depends(get_db)):
         #Use activation_email fonction in email_sender.py and same logic from forgot password
         access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXIPRE_MINUTES)
         access_token = create_access_token(data={"sub":user.email}, expires_delta=access_token_expires)
+        #add key to redis token_watcher
+        r.setex(f'{user_exists.id}_access_token', timedelta(ACCESS_TOKEN_EXIPRE_MINUTES), access_token)
         refresh_token = create_refresh_token(data={"sub":user.email})
         return {"access_token": access_token, "token_type":"bearer", "refresh_token": refresh_token}
 
@@ -68,10 +75,16 @@ def refresh_token(token: token_schema.Token, db: Session = Depends(get_db)):
             payload = decode_token(token=token.access_token)
             username: str = payload.get("sub")
         except:
-            HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Something went wrong while decoding token")
+            HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Something went wrong while decoding token")       
         user = users_service.get_by_email(db, username)
+        #blacklist the old token
+        r.expire(f'{user.id}_access_token', timedelta(seconds=0))
+
         access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXIPRE_MINUTES)
         access_token = create_access_token(data={"sub":user.email}, expires_delta=access_token_expires)
+        #add the new token to token watcher
+        r.setex(f'{user.id}_access_token', access_token_expires, access_token)
+
         return {"access_token": access_token, "token_type":"bearer", "refresh_token":token.refresh_token}
     else:
         try:
@@ -82,8 +95,14 @@ def refresh_token(token: token_schema.Token, db: Session = Depends(get_db)):
         if username is None:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid authentication credentials.")
         user = users_service.get_by_email(db, username)
+
+        r.expire(f'{user.id}_access_token', timedelta(seconds=0))
+
         access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXIPRE_MINUTES)
         access_token = create_access_token(data={"sub":user.email}, expires_delta=access_token_expires)
+        #add new token to token watcher
+        r.setex(f'{user.id}_access_token', access_token_expires, access_token)
+
         return {"access_token": access_token, "token_type": "bearer", "refresh_token": token.refresh_token}
 
 
@@ -96,6 +115,7 @@ async def forgot_password(forgot_password: user_schema.UserForgotPassword , db: 
         password_reset_token_expires = timedelta(minutes=60)
         password_reset_token = create_access_token(data={"sub":forgot_password.email}, expires_delta=password_reset_token_expires)
 
+        r.setex(f'{user_exists.id}_password_token', password_reset_token_expires, password_reset_token)
         await email_sender.compose_email(forgot_password, password_reset_token)
         return {"detail":"Reset link was sent to the entered e-mail."}
         
@@ -109,14 +129,25 @@ def reset_password(request: user_schema.UserPasswordReset, db: Session = Depends
             username: str = payload.get("sub")
         except:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Something went wrong while decoding token")
+
     user_exists = users_service.get_by_email(db, username)
+
     if user_exists is None: 
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="User doesn't exist!")
+
+    #check for token in redis cache
+    if r.exists(f'{user_exists.id}_password_token') != 0:
+        redis_token = r.get(f'{user_exists.id}_password_token')
+        if redis_token.decode('utf-8') != request.confirmation:
+            raise HTTPException(status_code= status.HTTP_401_UNAUTHORIZED, detail="Invalid password reset link!")
+    else:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid password reset link!")
     if request.password != request.confirm_password:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Passwords don't match!")
     user = user_schema.UserEdit(password=request.password)
     users_service.update_user(db, user, user_exists.id)
-    #TODO INVALIDATE TOKEN using redis caching
+    #INVALIDATE TOKEN using redis caching
+    r.expire(f'{user_exists.id}_password_token', timedelta(seconds=0))
     return {"detail":"Password successfully changed, you will be redirected to the login page shortly."}
 
     

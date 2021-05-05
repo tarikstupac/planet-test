@@ -1,13 +1,27 @@
 from fastapi import APIRouter, Depends, status, HTTPException
 from sqlalchemy.orm import Session
 from typing import List
+
+from starlette.status import HTTP_401_UNAUTHORIZED
 from database import get_db
 from schemas import tile_schema
 from services import tiles_service, country_service, users_service
 from helpers import authentication
 from routers.oauth2 import check_credentials
+from redis_conf import token_watcher as r
 
 router = APIRouter(prefix='/tiles', tags=["Tiles"])
+
+def check_token_validity(user_id: int, token:str):
+    if r.exists(f'{user_id}_access_token') != 0:
+        redis_token = r.get(f'{user_id}_access_token')
+        if redis_token.decode('utf-8') == token:
+            return True
+        else:
+            return False
+    else:
+        return False
+
 
 @router.get("/country", response_description=status.HTTP_200_OK)
 def get_tiles_by_country(db: Session = Depends(get_db)):
@@ -40,8 +54,14 @@ def get_tiles(quadkeys: List[str], db: Session = Depends(get_db)):
 def get_tiles_by_user_id(user_id: int, db: Session = Depends(get_db), token: str = Depends(authentication.oauth2_scheme)):
     token_data = check_credentials(token)
     user = users_service.get_by_email(db, token_data.username)
+
+    token_valid = check_token_validity(user.id, token)
+    if token_valid is False:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="You are not logged in or your session has expired!")
+
     if user.id != user_id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You do not have required permissions for this action!")
+    
     tiles = tiles_service.get_tiles_by_user_id(db, user_id=user_id)
     if tiles is None or len(tiles) < 1:
         raise HTTPException(status_code=status.HTTP_200_OK, detail="No tiles found for user id or user with the id doesn't exist!")
