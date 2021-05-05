@@ -3,7 +3,7 @@ from os import stat
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
-from starlette.status import HTTP_400_BAD_REQUEST, HTTP_401_UNAUTHORIZED
+from starlette.status import HTTP_200_OK, HTTP_400_BAD_REQUEST, HTTP_401_UNAUTHORIZED
 from helpers.authentication import oauth2_scheme, verify_password, ACCESS_TOKEN_EXIPRE_MINUTES, create_access_token
 from helpers.authentication import get_password_hash, create_refresh_token, verify_token, decode_refresh_token, decode_token
 from database import get_db
@@ -34,7 +34,10 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
     access_token = create_access_token(data={"sub": user_exists.email}, expires_delta= access_token_expires)
     #add key to redis token watcher
     r.setex(f'{user_exists.id}_access_token', timedelta(ACCESS_TOKEN_EXIPRE_MINUTES), access_token)
+
     refresh_token = create_refresh_token(data={"sub":user_exists.email})
+    #add refresh token key to redis token_watcher
+    r.set(f'{user_exists.id}_refresh_token', refresh_token)
     
     return {"access_token": access_token, "token_type": "bearer", "refresh_token": refresh_token}
     
@@ -65,6 +68,8 @@ def register(user: user_schema.UserCreate, db: Session = Depends(get_db)):
         #add key to redis token_watcher
         r.setex(f'{user_exists.id}_access_token', timedelta(ACCESS_TOKEN_EXIPRE_MINUTES), access_token)
         refresh_token = create_refresh_token(data={"sub":user.email})
+        #add refresh token key to redis token_watcher
+        r.set(f'{user_exists.id}_refresh_token', refresh_token)
         return {"access_token": access_token, "token_type":"bearer", "refresh_token": refresh_token}
 
 @router.post('/refresh', response_model=token_schema.Token, status_code=status.HTTP_200_OK)
@@ -84,7 +89,6 @@ def refresh_token(token: token_schema.Token, db: Session = Depends(get_db)):
         access_token = create_access_token(data={"sub":user.email}, expires_delta=access_token_expires)
         #add the new token to token watcher
         r.setex(f'{user.id}_access_token', access_token_expires, access_token)
-
         return {"access_token": access_token, "token_type":"bearer", "refresh_token":token.refresh_token}
     else:
         try:
@@ -170,6 +174,20 @@ def verify_account(request: user_schema.UserActivateAccount, db: Session = Depen
     access_token = create_access_token(data={"sub":user.email}, expires_delta=access_token_expires)
     refresh_token = create_refresh_token(data={"sub":user.email})
     return {"access_token": access_token, "token_type":"bearer", "refresh_token": refresh_token}
+
+@router.post("/logout", status_code= status.HTTP_200_OK, response_description="Successfully logged out")
+def logout(token: token_schema.Token, db: Session = Depends(get_db)):
+    valid = verify_token(token.access_token)
+    if valid:
+        try:
+            payload = decode_token(token=token.access_token)
+            username: str = payload.get("sub")
+        except:
+            HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Something went wrong while decoding token")       
+        user = users_service.get_by_email(db, username)
+        #expire the token
+        r.expire(f'{user.id}_access_token', timedelta(seconds=0))
+        r.expire(f'{user.id}_refresh_token', timedelta(seconds=0))
 
 
 def check_credentials(token: str = Depends(oauth2_scheme)):
