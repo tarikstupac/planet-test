@@ -9,6 +9,7 @@ from services import tiles_service, country_service, users_service
 from helpers import authentication
 from routers.oauth2 import check_credentials
 from redis_conf import token_watcher as r
+from redis_conf import country_watcher as cr
 
 router = APIRouter(prefix='/tiles', tags=["Tiles"])
 
@@ -47,15 +48,26 @@ def insert_tiles(tiles: List[tile_schema.Tile], db: Session = Depends(get_db), t
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No tiles supplied!")
     tiles_service.insert_tiles(db, tiles)
 
-@router.post("/gettilesbyquadkeys", response_model=List[tile_schema.Tile], status_code=status.HTTP_200_OK)
+@router.post("/gettilesbyquadkeys", status_code=status.HTTP_200_OK)
 def get_tiles(quadkeys: List[str], db: Session = Depends(get_db)):
+    tiles_list = []
     if len(quadkeys) < 1 or quadkeys is None:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No quadkeys found in the request.")
     #TODO implement check in tile38/redis for locked keys here
+    pipe = cr.pipeline(transaction=False)
+    for key in quadkeys:
+        pipe.execute_command('INTERSECTS','countries', 'COUNT', 'QUADKEY', key)
+    tile38_objects = pipe.execute()
+
+    for i in range(0, len(quadkeys)):
+        if tile38_objects[i] == 1:
+            tiles_list.append({"id":quadkeys[i], "available":0})
+    
     tiles = tiles_service.get_tiles(db, quadkeys=quadkeys)
-    if len(tiles) < 1 :
-        raise HTTPException(status_code=status.HTTP_200_OK, detail="No tiles with specified quadkeys found!")
-    return tiles
+    tiles_list.extend([tiles[i] for i in range(0, len(tiles))])
+    if len(tiles_list) < 1 :
+        raise HTTPException(status_code=status.HTTP_200_OK, detail="No tiles with specified quadkeys found and no locked tiles found!")
+    return tiles_list
 
 @router.get("/{user_id}", response_model=List[tile_schema.Tile], status_code=status.HTTP_200_OK)
 def get_tiles_by_user_id(user_id: int, db: Session = Depends(get_db), token: str = Depends(authentication.oauth2_scheme)):
