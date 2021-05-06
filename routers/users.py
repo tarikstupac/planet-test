@@ -75,7 +75,7 @@ def update_user(user_id: int, user: user_schema.UserEdit, db: Session = Depends(
     if user_exists is None:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="User not found")
 
-    token_valid = check_token_validity(user.id, token)
+    token_valid = check_token_validity(user_exists.id, token)
     if token_valid is False:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="You are not logged in or your session has expired!")
     

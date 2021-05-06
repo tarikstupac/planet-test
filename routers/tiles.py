@@ -51,6 +51,7 @@ def insert_tiles(tiles: List[tile_schema.Tile], db: Session = Depends(get_db), t
 def get_tiles(quadkeys: List[str], db: Session = Depends(get_db)):
     if len(quadkeys) < 1 or quadkeys is None:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No quadkeys found in the request.")
+    #TODO implement check in tile38/redis for locked keys here
     tiles = tiles_service.get_tiles(db, quadkeys=quadkeys)
     if len(tiles) < 1 :
         raise HTTPException(status_code=status.HTTP_200_OK, detail="No tiles with specified quadkeys found!")
