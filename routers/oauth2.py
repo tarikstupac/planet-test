@@ -64,12 +64,12 @@ def register(user: user_schema.UserCreate, db: Session = Depends(get_db)):
         #replace this logic with account activation email in the future.
         #Use activation_email fonction in email_sender.py and same logic from forgot password
         access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXIPRE_MINUTES)
-        access_token = create_access_token(data={"sub":user.email}, expires_delta=access_token_expires)
+        access_token = create_access_token(data={"sub":user_db.email}, expires_delta=access_token_expires)
         #add key to redis token_watcher
-        r.setex(f'{user_exists.id}_access_token', timedelta(ACCESS_TOKEN_EXIPRE_MINUTES), access_token)
-        refresh_token = create_refresh_token(data={"sub":user.email})
+        r.setex(f'{user_db.id}_access_token', timedelta(ACCESS_TOKEN_EXIPRE_MINUTES), access_token)
+        refresh_token = create_refresh_token(data={"sub":user_db.email})
         #add refresh token key to redis token_watcher
-        r.set(f'{user_exists.id}_refresh_token', refresh_token)
+        r.set(f'{user_db.id}_refresh_token', refresh_token)
         return {"access_token": access_token, "token_type":"bearer", "refresh_token": refresh_token}
 
 @router.post('/refresh', response_model=token_schema.Token, status_code=status.HTTP_200_OK)

@@ -6,9 +6,11 @@ from typing import List
 from models import tiles, countries
 from schemas import tile_schema
 from sqlalchemy.exc import SQLAlchemyError
+from helpers import quadkey_parser
 
 def get_tiles(db: Session, quadkeys : List[str]):
-    return db.query(tiles.Tile).filter(tiles.Tile.id.in_(quadkeys)).all()
+    quadints = [quadkey_parser.quadkey_to_quadint(quadkeys[i]) for i in range(len(quadkeys))]
+    return db.query(tiles.Tile).filter(tiles.Tile.id.in_(quadints)).all()
 
 def get_tiles_by_user_id(db: Session, user_id: int):
     return db.query(tiles.Tile).filter(tiles.Tile.user_id == user_id).all()
@@ -22,7 +24,7 @@ def insert_tiles(db: Session, tiles_schema: List[tile_schema.Tile]):
     db_tiles = []
     for tile in tiles_schema:
         db_tile = tiles.Tile(
-            id=tile.id,
+            id= quadkey_parser.quadkey_to_quadint(tile.id),
             base_price=tile.base_price,
             location=tile.location,
             available=tile.available,

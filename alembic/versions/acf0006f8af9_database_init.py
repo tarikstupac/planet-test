@@ -1,8 +1,8 @@
-"""Database tables init
+"""Database init.
 
-Revision ID: b27422a7aa8e
+Revision ID: acf0006f8af9
 Revises: 
-Create Date: 2021-04-22 15:10:31.912722
+Create Date: 2021-05-11 08:48:47.268535
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = 'b27422a7aa8e'
+revision = 'acf0006f8af9'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -38,7 +38,7 @@ def upgrade():
     sa.Column('phone', sa.String(length=30), nullable=True),
     sa.Column('flag', sa.String(length=10), nullable=True),
     sa.Column('map_style', sa.SmallInteger(), nullable=True),
-    sa.Column('display_name', sa.String(length=20), nullable=True),
+    sa.Column('profile_image', sa.String(length=150), nullable=True),
     sa.Column('country_id', sa.String(), nullable=False),
     sa.ForeignKeyConstraint(['country_id'], ['countries.id'], ),
     sa.PrimaryKeyConstraint('id')
@@ -46,7 +46,7 @@ def upgrade():
     op.create_index(op.f('ix_users_email'), 'users', ['email'], unique=True)
     op.create_index(op.f('ix_users_username'), 'users', ['username'], unique=True)
     op.create_table('tiles',
-    sa.Column('id', sa.String(), nullable=False),
+    sa.Column('id', sa.BigInteger(), nullable=False),
     sa.Column('base_price', sa.Float(), nullable=False),
     sa.Column('location', sa.String(length=150), nullable=True),
     sa.Column('available', sa.SmallInteger(), nullable=True),
@@ -75,7 +75,7 @@ def upgrade():
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('unit_price', sa.Float(), nullable=True),
     sa.Column('transaction_id', sa.Integer(), nullable=False),
-    sa.Column('tile_id', sa.String(), nullable=False),
+    sa.Column('tile_id', sa.BigInteger(), nullable=False),
     sa.ForeignKeyConstraint(['tile_id'], ['tiles.id'], ),
     sa.ForeignKeyConstraint(['transaction_id'], ['transactions.id'], ),
     sa.PrimaryKeyConstraint('id')

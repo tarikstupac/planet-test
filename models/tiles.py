@@ -1,5 +1,5 @@
 from database import Base
-from sqlalchemy import Column, Integer, String, SmallInteger, Float, ForeignKey
+from sqlalchemy import Column, Integer, String, SmallInteger, Float, ForeignKey, BigInteger
 from sqlalchemy import DateTime, func
 from datetime import datetime
 from sqlalchemy.orm import relationship
@@ -9,7 +9,7 @@ from models.users import User
 
 class Tile(Base):
     __tablename__ = "tiles"
-    id = Column(String, primary_key=True)
+    id = Column(BigInteger, primary_key=True)
     base_price = Column(Float, nullable=False)
     location = Column(String(150))
     available = Column(SmallInteger)

@@ -9,7 +9,8 @@ from services import tiles_service, country_service, users_service
 from helpers import authentication
 from routers.oauth2 import check_credentials
 from redis_conf import token_watcher as r
-from redis_conf import country_watcher as cr
+#from redis_conf import country_watcher as cr
+from helpers import quadkey_parser
 
 router = APIRouter(prefix='/tiles', tags=["Tiles"])
 
@@ -53,17 +54,22 @@ def get_tiles(quadkeys: List[str], db: Session = Depends(get_db)):
     tiles_list = []
     if len(quadkeys) < 1 or quadkeys is None:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No quadkeys found in the request.")
-    #TODO implement check in tile38/redis for locked keys here
-    pipe = cr.pipeline(transaction=False)
-    for key in quadkeys:
-        pipe.execute_command('INTERSECTS','countries', 'COUNT', 'QUADKEY', key)
-    tile38_objects = pipe.execute()
-
-    for i in range(0, len(quadkeys)):
-        if tile38_objects[i] == 1:
-            tiles_list.append({"id":quadkeys[i], "available":0})
+    #Checking locked keys in tile38
+    #creating pipeline and executing intersects with quadkeys
+    # pipe = cr.pipeline(transaction=False)
+    # for key in quadkeys:
+    #     pipe.execute_command('INTERSECTS','countries', 'COUNT', 'QUADKEY', key)
+    # tile38_objects = pipe.execute()
+    #checking response list for keys in locked countries
+    #by checking the count object returned by tile38
+    # for i in range(0, len(quadkeys)):
+    #     if tile38_objects[i] == 1:
+    #         tiles_list.append({"id":quadkeys[i], "available":0})
     
     tiles = tiles_service.get_tiles(db, quadkeys=quadkeys)
+    for tile in tiles:
+        tile.id = quadkey_parser.quadint_to_quadkey(tile.id)
+    #adding found tiles in db to the list of locked tiles
     tiles_list.extend([tiles[i] for i in range(0, len(tiles))])
     if len(tiles_list) < 1 :
         raise HTTPException(status_code=status.HTTP_200_OK, detail="No tiles with specified quadkeys found and no locked tiles found!")
