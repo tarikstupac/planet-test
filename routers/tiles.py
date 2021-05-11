@@ -1,8 +1,9 @@
+from os import stat
 from fastapi import APIRouter, Depends, status, HTTPException
 from sqlalchemy.orm import Session
 from typing import List
 
-from starlette.status import HTTP_401_UNAUTHORIZED
+from starlette.status import HTTP_400_BAD_REQUEST, HTTP_401_UNAUTHORIZED
 from database import get_db
 from schemas import tile_schema
 from services import tiles_service, country_service, users_service
@@ -96,7 +97,8 @@ def get_tiles_by_user_id(user_id: int, db: Session = Depends(get_db), token: str
 def get_tiles_for_user_by_country(user_id: int, db: Session = Depends(get_db), token: str = Depends(authentication.oauth2_scheme)):
     token_data = check_credentials(token)
     user = users_service.get_by_email(db, token_data.username)
-
+    if user is None:
+        raise HTTPException(status_code= status.HTTP_400_BAD_REQUEST, detail="No user exists.")
     token_valid = check_token_validity(user.id, token)
     if token_valid is False:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="You are not logged in or your session has expired!")
@@ -112,6 +114,8 @@ def get_tiles_for_user_by_country(user_id: int, db: Session = Depends(get_db), t
     for country in distinct_countries:
         temp = country_service.get_by_id(db, country['country_id'])
         tile_list = tiles_service.get_tiles_by_user_country(db, user_id, temp.id)
+        for tile in tile_list:
+            tile.id = quadkey_parser.quadint_to_quadkey(tile.id)
         obj = {'id': temp.id, 'name' : temp.name,"tiles" : tile_list}
         tiles_by_country.append(obj)
     if tiles_by_country is None or len(tiles_by_country) < 1 :

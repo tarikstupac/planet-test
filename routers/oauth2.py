@@ -185,6 +185,8 @@ def logout(token: token_schema.Token, db: Session = Depends(get_db)):
         except:
             HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Something went wrong while decoding token")       
         user = users_service.get_by_email(db, username)
+        if user is None:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="User with the email doesn't exist.")
         #expire the token
         r.expire(f'{user.id}_access_token', timedelta(seconds=0))
         r.expire(f'{user.id}_refresh_token', timedelta(seconds=0))
