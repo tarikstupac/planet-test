@@ -91,6 +91,8 @@ def get_tiles_by_user_id(user_id: int, db: Session = Depends(get_db), token: str
     tiles = tiles_service.get_tiles_by_user_id(db, user_id=user_id)
     if tiles is None or len(tiles) < 1:
         raise HTTPException(status_code=status.HTTP_200_OK, detail="No tiles found for user id or user with the id doesn't exist!")
+    for tile in tiles:
+            tile.id = quadkey_parser.quadint_to_quadkey(tile.id)
     return tiles
 
 @router.get("/{user_id}/country", status_code=status.HTTP_200_OK)
