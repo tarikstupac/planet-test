@@ -1,5 +1,6 @@
 from os import stat
 from fastapi import APIRouter, Depends, status, HTTPException
+from fastapi.security import oauth2
 from sqlalchemy.orm import Session
 from typing import List
 
@@ -124,6 +125,24 @@ def get_tiles_for_user_by_country(user_id: int, db: Session = Depends(get_db), t
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Can't fetch tiles by country for the given user")
     return tiles_by_country
     
+@router.put("/", status_code=status.HTTP_202_ACCEPTED, response_description="Successfully updated tiles.")
+def edit_tiles(tiles: List[tile_schema.EditTile], db: Session = Depends(get_db), token: str = Depends(authentication.oauth2_scheme)):
+    token_data = check_credentials(token)
+    user = users_service.get_by_email(db, token_data.username)
+    
+    if user is None:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You do not have required permissions for this action!")
+
+    token_valid = check_token_validity(user.id, token)
+    if token_valid is False:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="You are not logged in or your session has expired!")
+
+    if len(tiles) < 1:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                            detail="No tiles found in the request.")
+
+    tiles = tiles_service.edit_tiles(db, tiles)
+
 
 
 

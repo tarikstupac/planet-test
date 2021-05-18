@@ -3,7 +3,7 @@ from fastapi.responses import RedirectResponse
 import uvicorn
 import os
 from fastapi.middleware.cors import CORSMiddleware
-from routers import users, tiles, oauth2, countries
+from routers import users, tiles, oauth2, countries, transactions
 
 
 app = FastAPI(
@@ -30,6 +30,7 @@ app.include_router(users.router)
 app.include_router(tiles.router)
 app.include_router(oauth2.router)
 app.include_router(countries.router)
+app.include_router(transactions.router)
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=os.environ.get("PORT", 5000))

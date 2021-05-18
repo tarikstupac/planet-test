@@ -91,4 +91,18 @@ def update_user(user_id: int, user: user_schema.UserEdit, db: Session = Depends(
         edited_user = users_service.update_user(db, user, user_id)
         return edited_user
 
+@router.post('/addcredits/{amount}', response_model=user_schema.User, status_code=status.HTTP_202_ACCEPTED, response_description="Credit was successfully added.")
+def add_credits(amount: int, db: Session = Depends(get_db), token: str = Depends(authentication.oauth2_scheme)):
 
+    token_data = check_credentials(token)
+    user_exists = users_service.get_by_email(db, token_data.username)
+    if user_exists is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="User not found")
+
+    token_valid = check_token_validity(user_exists.id, token)
+    if token_valid is False:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="You are not logged in or your session has expired!")
+
+    user_added_credit = users_service.add_credits(user_exists.id, amount, db)
+    return user_added_credit

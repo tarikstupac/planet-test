@@ -66,3 +66,52 @@ def get_distinct_countries(db: Session, user_id: int):
 
 def get_tiles_by_user_country(db: Session, user_id: int, country_id: str):
     return db.query(tiles.Tile).filter(tiles.Tile.user_id == user_id, tiles.Tile.country_id == country_id).all()
+
+def get_tile_by_id(db: Session, id: str):
+    """A function that queries the Tile table for tile matching the tile id (quadkey).
+
+    This function queries the Tile table in the database and returns the tile
+    with the id matching the one passed as an argument.
+
+    :param db: SQLAlchemy database session object
+    :type db: Session
+    :param id: Id of the tile that will be used to query the Tiles table
+    :type id: int
+    :return: Tile model matching the id passed as an argument
+    """
+    parsed_id = quadkey_parser.quadkey_to_quadint(id)
+    return db.query(tiles.Tile).filter(tiles.Tile.id == parsed_id).first()
+
+def edit_tiles(db: Session, tiles: List[tile_schema.EditTile]):
+    """A function that edits a list of tiles in the database
+
+    This function edits a list of tile objects in the database. This function
+    uses SQLAlchemy bulk_save_objects call to do bulk insert query.
+
+    :param db: SQLAlchemy database session
+    :type db: Session
+    :param tiles_schema: A list of pydantic schema Tile objects to
+    be updated in the database
+    :type tiles_schema: List[tile_schema.Tile]
+    :raises HTTPException: Error 400, this exception is raised during editing
+    if there is something wrong
+    :return: Returns a boolean value of True to indicate that the tiles were successfully
+    updated
+    :rtype: bool
+    """
+    db_tiles = []
+    for tile in tiles:
+        db_tile = get_tile_by_id(db, tile.id)
+        update_data = tile.dict(exclude_unset=True)
+        for key, value in update_data.items():
+            if(value != db_tile.id):
+                setattr(db_tile, key, value)
+        db_tiles.append(db_tile)
+    try:
+        db.bulk_save_objects(db_tiles)
+        db.commit()
+        return True
+    except SQLAlchemyError as e:
+        db.rollback()
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                            detail="Problem while updating tiles! or " + str(type(e)))

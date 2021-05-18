@@ -80,5 +80,15 @@ def activate_user(db: Session, user_id: int):
     db.refresh(db_user)
     return db_user
 
+def add_credits(user_id: int, amount: int, db: Session):
+    db_user = get_by_id(db, user_id)
+
+    if amount > 0 :
+        db_user.credit += amount
+
+    db.add(db_user)
+    db.commit()
+    db.refresh(db_user)
+    return db_user
 
     

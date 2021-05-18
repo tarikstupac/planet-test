@@ -1,5 +1,5 @@
 from typing import Optional
-from pydantic import BaseModel, constr, EmailStr, SecretStr
+from pydantic import BaseModel, constr, EmailStr
 from schemas.country_schema import Country
 
 
@@ -14,6 +14,7 @@ class User(BaseModel):
     flag: Optional[str]
     map_style: Optional[int]
     profile_image: Optional[constr(min_length=1, max_length=150)]
+    credit: int
     country_id: str
     country: Country
 
@@ -35,6 +36,7 @@ class UserCreate(BaseModel):
     flag: Optional[str] = 'BA'
     map_style: Optional[int]
     profile_image: Optional[constr(min_length=1, max_length=150)] = "https://thispersondoesnotexist.com/image"
+    credit: int = 0
     country_id: str
 
     class Config:
@@ -52,6 +54,7 @@ class UserEdit(BaseModel):
     flag: Optional[str]
     map_style: Optional[int]
     profile_image: Optional[constr(min_length=1)]
+    credit: Optional[int]
     country_id: Optional[str]
 
     class Config:
