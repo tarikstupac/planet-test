@@ -37,6 +37,7 @@ def insert_user(db:Session, user: user_schema.UserCreate):
         flag=user.flag,
         map_style=user.map_style,
         profile_image=user.profile_image,
+        credit=user.credit,
         country_id=user.country_id
     )
     try:
