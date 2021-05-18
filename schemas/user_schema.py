@@ -36,7 +36,7 @@ class UserCreate(BaseModel):
     flag: Optional[str] = 'BA'
     map_style: Optional[int]
     profile_image: Optional[constr(min_length=1, max_length=150)] = "https://thispersondoesnotexist.com/image"
-    credit: int = 0
+    credit: Optional[int] = 0
     country_id: str
 
     class Config:
