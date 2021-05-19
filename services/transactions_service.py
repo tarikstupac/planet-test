@@ -17,7 +17,7 @@ def insert_transaction(db: Session, transaction: transaction_schema.InsertTransa
     db_transaction_details = []
     totalprice = 0
 
-    if tiles_schema is None or len(tile_schema) < 1:
+    if tiles_schema is None or len(tiles_schema) < 1:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Something went wrong with tiles")
