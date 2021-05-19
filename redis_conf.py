@@ -9,4 +9,4 @@ if REDIS_URL is not None:
 else:
     token_watcher = redis.Redis(db=1)
     country_watcher = redis.Redis(host='127.0.0.1', port=9851, db=0)
-    contact_cache = redis.Redis(db=2)
+    contact_cache = redis.Redis(db=1)
