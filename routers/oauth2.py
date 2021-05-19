@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from os import stat
+import json
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
@@ -198,7 +198,7 @@ def contact(request: user_schema.UserContactForm):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Message can not be empty!")
     if len(request.email) < 1:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email field can not be empty!")
-    cc.set(f'{request.email}', request)
+    cc.set(f'{request.email}', str(request))
 
 
 def check_credentials(token: str = Depends(oauth2_scheme)):
