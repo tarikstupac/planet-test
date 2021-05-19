@@ -73,14 +73,14 @@ def insert_transaction(tiles: List[tile_schema.Tile],  db: Session = Depends(get
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="No tiles supplied!")
     transaction = transaction_schema.InsertTransaction()
-    new_transaction = transactions_service.insert_transaction(
+    user = transactions_service.insert_transaction(
         db, transaction, tiles, user_exists.id)
 
-    if new_transaction is None:
+    if user is None:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="Something went wrong while saving changes in database")
 
-    return user_exists
+    return user
 
 
 @router.put("/{trans_id}", status_code=status.HTTP_202_ACCEPTED)

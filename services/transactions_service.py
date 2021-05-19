@@ -93,7 +93,8 @@ def insert_transaction(db: Session, transaction: transaction_schema.InsertTransa
         db_user.credit -= totalprice
         db.add(db_user)
         db.commit()
-        return True
+        db.refresh(db_user)
+        return db_user
 
     except SQLAlchemyError as e:
         db.rollback()
