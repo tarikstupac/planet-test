@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, status, HTTPException
 from typing import List
 from sqlalchemy.orm import Session
 from database import get_db
-from schemas import transaction_schema, tile_schema
+from schemas import transaction_schema, tile_schema, user_schema
 from services import transactions_service, users_service, transactiondetails_service
 from helpers import authentication
 from routers.oauth2 import check_credentials
@@ -55,7 +55,7 @@ def get_transactions_by_user_id(user_id: int, db: Session = Depends(get_db), tok
     return transactions
 
 
-@router.post('/', status_code=status.HTTP_201_CREATED)
+@router.post('/', status_code=status.HTTP_201_CREATED, response_model=user_schema.User)
 def insert_transaction(tiles: List[tile_schema.Tile],  db: Session = Depends(get_db), token: str = Depends(authentication.oauth2_scheme)):
 
     token_data = check_credentials(token)
@@ -80,7 +80,7 @@ def insert_transaction(tiles: List[tile_schema.Tile],  db: Session = Depends(get
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="Something went wrong while saving changes in database")
 
-    return new_transaction
+    return user_exists
 
 
 @router.put("/{trans_id}", status_code=status.HTTP_202_ACCEPTED)

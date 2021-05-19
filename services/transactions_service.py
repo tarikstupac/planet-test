@@ -141,4 +141,11 @@ def get_all_transactions(db: Session, skip: int = 0, limit: int = 100):
 
 def delete_transaction(db: Session, trans_id: int):
 
-    return db.query(transactions.Transaction).filter(transactions.Transaction.id == trans_id).delete()
+    try:
+        db.query(transactions.Transaction).filter(transactions.Transaction.id == trans_id).delete()
+        db.commit()
+        return True
+    except SQLAlchemyError as e:
+        db.rollback()
+        return None
+    
