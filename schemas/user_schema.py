@@ -75,3 +75,9 @@ class UserPasswordReset(BaseModel):
 
 class UserActivateAccount(BaseModel):
     email: EmailStr
+
+
+class UserContactForm(BaseModel):
+    name: str
+    email: EmailStr
+    message: str

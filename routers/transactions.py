@@ -56,7 +56,7 @@ def get_transactions_by_user_id(user_id: int, db: Session = Depends(get_db), tok
 
 
 @router.post('/', status_code=status.HTTP_201_CREATED)
-def insert_transaction(transaction: transaction_schema.InsertTransaction, tiles: List[tile_schema.Tile],  db: Session = Depends(get_db), token: str = Depends(authentication.oauth2_scheme)):
+def insert_transaction(tiles: List[tile_schema.Tile],  db: Session = Depends(get_db), token: str = Depends(authentication.oauth2_scheme)):
 
     token_data = check_credentials(token)
     user_exists = users_service.get_by_email(db, token_data.username)
@@ -72,7 +72,7 @@ def insert_transaction(transaction: transaction_schema.InsertTransaction, tiles:
     if tiles is None or len(tiles) < 1:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="No tiles supplied!")
-
+    transaction = transaction_schema.InsertTransaction({})
     new_transaction = transactions_service.insert_transaction(
         db, transaction, tiles, user_exists.id)
 

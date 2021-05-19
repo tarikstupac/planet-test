@@ -12,6 +12,7 @@ from services import users_service
 from schemas import token_schema, user_schema
 from helpers import email_sender
 from redis_conf import token_watcher as r
+from redis_conf import contact_cache as cc
 
 router = APIRouter(tags=['Authentication'])
 
@@ -190,6 +191,14 @@ def logout(token: token_schema.Token, db: Session = Depends(get_db)):
         #expire the token
         r.expire(f'{user.id}_access_token', timedelta(seconds=0))
         r.expire(f'{user.id}_refresh_token', timedelta(seconds=0))
+
+@router.post('/contact', status_code=status.HTTP_201_CREATED, response_description="Your message was submitted successfully.")
+def contact(request: user_schema.UserContactForm):
+    if len(request.message) < 1:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Message can not be empty!")
+    if len(request.email) < 1:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email field can not be empty!")
+    cc.set(f'{request.email}', request)
 
 
 def check_credentials(token: str = Depends(oauth2_scheme)):
