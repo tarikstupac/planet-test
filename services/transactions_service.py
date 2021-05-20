@@ -68,12 +68,12 @@ def insert_transaction(db: Session, transaction: transaction_schema.InsertTransa
 
     totaltiles = len(db_tiles)
 
-    new_trans_data = {
+    new_trans_data = transaction_schema.EditTransaction({
         "date_processed": datetime.utcnow(),
         "status": 1,
         "total_price": totalprice,
         "total_tiles": totaltiles
-    }
+    })
 
     db_user = users_service.get_by_id(db, db_transaction.user_id)
     if db_user.credit < totalprice:
