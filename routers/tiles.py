@@ -28,8 +28,8 @@ def check_token_validity(user_id: int, token:str):
 
 
 @router.get("/country", response_description=status.HTTP_200_OK)
-def get_tiles_by_country(db: Session = Depends(get_db)):
-    result = tiles_service.get_number_of_tiles_by_country(db)
+def get_tiles_by_country(db: Session = Depends(get_db), skip:int = 0, limit: int = 100):
+    result = tiles_service.get_number_of_tiles_by_country(db, skip, limit)
     if result is None or len(result) < 1 :
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Couldn't get any tiles by country.")
     country_list = [dict(result[i]).items() for i in range(0, len(result))]
