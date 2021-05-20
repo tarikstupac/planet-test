@@ -115,7 +115,7 @@ def update_transaction(db: Session, transaction: transaction_schema.EditTransact
     if db_transaction is None:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="Transaction not found")
-    if(type(transaction) == dict):
+    if(type(transaction) != dict):
         update_data = transaction.dict(exclude_unset=True)
     else:
         update_data = transaction(exclude_unset=True)
