@@ -68,12 +68,12 @@ def insert_transaction(db: Session, transaction: transaction_schema.InsertTransa
 
     totaltiles = len(db_tiles)
 
-    new_trans_data = transaction_schema.EditTransaction({
+    new_trans_data = {
         "date_processed": datetime.utcnow(),
         "status": 1,
         "total_price": totalprice,
         "total_tiles": totaltiles
-    })
+    }
 
     db_user = users_service.get_by_id(db, db_transaction.user_id)
     if db_user.credit < totalprice:
@@ -115,8 +115,10 @@ def update_transaction(db: Session, transaction: transaction_schema.EditTransact
     if db_transaction is None:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="Transaction not found")
-
-    update_data = transaction.dict(exclude_unset=True)
+    if(type(transaction) == dict):
+        update_data = transaction.dict(exclude_unset=True)
+    else:
+        update_data = transaction(exclude_unset=True)
     for key, value in update_data.items():
         setattr(db_transaction, key, value)
 
