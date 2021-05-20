@@ -118,7 +118,7 @@ def update_transaction(db: Session, transaction: transaction_schema.EditTransact
     if(type(transaction) != dict):
         update_data = transaction.dict(exclude_unset=True)
     else:
-        update_data = transaction(exclude_unset=True)
+        update_data = transaction
     for key, value in update_data.items():
         setattr(db_transaction, key, value)
 
