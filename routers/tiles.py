@@ -126,7 +126,7 @@ def get_tiles_for_user_by_country(user_id: int, db: Session = Depends(get_db), t
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Can't fetch tiles by country for the given user")
     return tiles_by_country
 
-@router.get('{user_id}/details', status_code=status.HTTP_200_OK, response_description="Successfully fetched tile details for user")
+@router.get('/{user_id}/details', status_code=status.HTTP_200_OK, response_description="Successfully fetched tile details for user")
 def get_tile_details_for_user(user_id:int, db: Session = Depends(get_db)):
     user = users_service.get_by_id(db, user_id)
 
