@@ -3,6 +3,7 @@ from fastapi import APIRouter, Depends, status, HTTPException
 from fastapi.security import oauth2
 from sqlalchemy.orm import Session
 from typing import List
+from sqlalchemy.sql.expression import distinct
 
 from starlette.status import HTTP_400_BAD_REQUEST, HTTP_401_UNAUTHORIZED
 from database import get_db
@@ -124,6 +125,20 @@ def get_tiles_for_user_by_country(user_id: int, db: Session = Depends(get_db), t
     if tiles_by_country is None or len(tiles_by_country) < 1 :
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Can't fetch tiles by country for the given user")
     return tiles_by_country
+
+@router.get('{user_id}/details', status_code=status.HTTP_200_OK, response_description="Successfully fetched tile details for user")
+def get_tile_details_for_user(user_id:int, db: Session = Depends(get_db)):
+    user = users_service.get_by_id(db, user_id)
+
+    if user is None:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No user exists for specified parameters.")
+    
+    distinct_countries = tiles_service.get_distinct_countries(db, user_id)
+    list_of_tiles = tiles_service.get_tiles_by_user_id(db, user_id)
+
+    obj = {"number_of_tiles":len(list_of_tiles), "number_of_countries":len(distinct_countries)}
+    return obj
+    
     
 @router.put("/", status_code=status.HTTP_202_ACCEPTED, response_description="Successfully updated tiles.")
 def edit_tiles(tiles: List[tile_schema.EditTile], db: Session = Depends(get_db), token: str = Depends(authentication.oauth2_scheme)):
