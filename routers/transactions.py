@@ -49,7 +49,7 @@ def get_transactions_by_user_id(user_id: int, skip:int = 0, limit:int = 100, db:
 
     transactions = transactions_service.get_transactions_by_user_id(
         db, user_id, skip, limit)
-    if transactions is None:
+    if transactions is None or len(transactions) < 1:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                             detail="Transactions are not found")
     return transactions
