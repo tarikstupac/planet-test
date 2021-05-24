@@ -35,7 +35,7 @@ def get_all_transactions(skip: int = 0, limit: int = 100, db: Session = Depends(
 
 
 @router.get("/user/{user_id}", status_code=status.HTTP_200_OK)
-def get_transactions_by_user_id(user_id: int, db: Session = Depends(get_db), token: str = Depends(authentication.oauth2_scheme)):
+def get_transactions_by_user_id(user_id: int, skip:int = 0, limit:int = 100, db: Session = Depends(get_db), token: str = Depends(authentication.oauth2_scheme)):
 
     token_data = check_credentials(token)
     user_exists = users_service.get_by_email(db, token_data.username)
@@ -48,7 +48,7 @@ def get_transactions_by_user_id(user_id: int, db: Session = Depends(get_db), tok
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="You are not logged in or your session has expired!")
 
     transactions = transactions_service.get_transactions_by_user_id(
-        db, user_id=user_id)
+        db, user_id, skip, limit)
     if transactions is None:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                             detail="Transactions are not found")
