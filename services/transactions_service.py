@@ -137,7 +137,7 @@ def update_transaction(db: Session, transaction: transaction_schema.EditTransact
 
 def get_transactions_by_user_id(db: Session, user_id: int, skip: int, limit: int):
 
-    return db.query(transactions.Transaction).filter(transactions.Transaction.user_id == user_id).offset(skip).limit(limit).all()
+    return db.query(transactions.Transaction).filter(transactions.Transaction.user_id == user_id).order_by(desc(transactions.Transaction.id)).offset(skip).limit(limit).all()
 
 
 def get_all_transactions(db: Session, skip: int = 0, limit: int = 100):
