@@ -36,6 +36,9 @@ def insert_transaction(db: Session, transaction: transaction_schema.InsertTransa
             detail="Something went wrong with transaction")
 
     for tile in tiles_schema:
+        if tile.country_id is None or tile.country_id == '' or tile.country_id == 'SEA':
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Can not buy tiles on the ocean or sea!')
+
         db_tile = tiles.Tile(
             id=quadkey_parser.quadkey_to_quadint(tile.id),
             base_price=tile.base_price,
@@ -100,7 +103,7 @@ def insert_transaction(db: Session, transaction: transaction_schema.InsertTransa
         db.rollback()
         delete_transaction(db, db_transaction.id)
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
-                            detail="Transaction failed")
+                            detail="Transaction failed : " + str(type(e)))
 
 
 def get_by_id(db: Session, trans_id: int):
