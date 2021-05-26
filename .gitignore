@@ -2,3 +2,9 @@ __pycache__
 venv
 .DS_Store
 .vscode
+alembic/versions/3269fceb7bcb_added_users_with_credits.py
+helpers/insert.json
+helpers/query.txt
+helpers/tile_query_creator.py
+helpers/tiles_get.json
+helpers/tiles.csv
