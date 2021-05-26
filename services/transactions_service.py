@@ -37,7 +37,7 @@ def insert_transaction(db: Session, transaction: transaction_schema.InsertTransa
 
     for tile in tiles_schema:
         if tile.country_id is None or tile.country_id == '' or tile.country_id == 'SEA':
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Can not buy tiles on the ocean or sea!')
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='You can only buy tiles on land!')
 
         db_tile = tiles.Tile(
             id=quadkey_parser.quadkey_to_quadint(tile.id),
