@@ -1,3 +1,4 @@
+from decimal import Decimal
 from typing import Optional, List
 from pydantic import BaseModel, constr, PositiveFloat
 from datetime import datetime
@@ -7,7 +8,7 @@ from schemas.user_schema import User
 
 
 class Tile(BaseModel):
-    id : constr(min_length=21, max_length=21)
+    id : str
     base_price : PositiveFloat
     location : constr(min_length=1, max_length=150) 
     available : int
@@ -21,6 +22,18 @@ class Tile(BaseModel):
 
     class Config:
         orm_mode = True
+
+class TileInsert(BaseModel):
+    id : constr(min_length=21, max_length=21)
+    base_price : PositiveFloat
+    location : constr(min_length=1, max_length=150) 
+    available : int
+    tile_class : int
+    for_sale : int
+    user_flag : Optional[str]
+    date_changed : Optional[datetime]
+    country_id : str
+    user_id : int
 
 
 class TileByCountry(BaseModel):

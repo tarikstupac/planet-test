@@ -1,7 +1,5 @@
-from sqlalchemy.sql.sqltypes import BigInteger
 from database import Base
-from sqlalchemy import Column, Integer, ForeignKey, Float, String
-from sqlalchemy import DateTime, func
+from sqlalchemy import Column, Integer, ForeignKey, Float, Numeric
 from sqlalchemy.orm import relationship
 from models.transactions import Transaction
 from models.tiles import Tile
@@ -13,7 +11,7 @@ class TransactionDetail(Base):
     unit_price = Column(Float)
     transaction_id = Column(Integer, ForeignKey('transactions.id'), nullable=False)
     transaction = relationship("Transaction", backref="transaction_details")
-    tile_id = Column(BigInteger, ForeignKey('tiles.id'), nullable=False)
+    tile_id = Column(Numeric(20,0), ForeignKey('tiles.id'), nullable=False)
     tile = relationship("Tile", backref="transaction_details")
 
     def __init__(self, unit_price, transaction_id, tile_id):

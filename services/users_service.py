@@ -1,4 +1,6 @@
+from fastapi.exceptions import HTTPException
 from sqlalchemy.orm import Session
+import sys
 from sqlalchemy import func, join, desc
 from sqlalchemy.sql import label
 from models import users, tiles
@@ -84,8 +86,10 @@ def activate_user(db: Session, user_id: int):
 def add_credits(user_id: int, amount: int, db: Session):
     db_user = get_by_id(db, user_id)
 
-    if amount > 0 :
+    if amount > 0 and amount <= sys.maxsize :
         db_user.credit += amount
+    else:
+        return None
 
     db.add(db_user)
     db.commit()

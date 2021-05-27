@@ -11,7 +11,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from datetime import datetime
 from helpers import quadkey_parser
 
-def insert_transaction(db: Session, transaction: transaction_schema.InsertTransaction, tiles_schema: List[tile_schema.Tile], userid: int):
+def insert_transaction(db: Session, transaction: transaction_schema.InsertTransaction, tiles_schema: List[tile_schema.TileInsert], userid: int):
 
     db_tiles = []
     db_transaction_details = []

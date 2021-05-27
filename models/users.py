@@ -1,6 +1,6 @@
 """A module containing the necessary code for the SQLAlchemy Users model"""
 from database import Base
-from sqlalchemy import Column, Integer, String, SmallInteger, ForeignKey
+from sqlalchemy import Column, Integer, String, SmallInteger, ForeignKey, BigInteger
 from sqlalchemy import DateTime, func
 from sqlalchemy.orm import relationship
 from models.countries import Country
@@ -52,7 +52,7 @@ class User(Base):
     flag = Column(String(10), nullable=True)
     map_style = Column(SmallInteger)
     profile_image = Column(String(150), nullable=True)
-    credit = Column(Integer)
+    credit = Column(BigInteger())
     country_id = Column(String, ForeignKey('countries.id'), nullable=False)
     country = relationship("Country", backref="users")
 

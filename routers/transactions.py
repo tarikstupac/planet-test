@@ -56,7 +56,7 @@ def get_transactions_by_user_id(user_id: int, skip:int = 0, limit:int = 100, db:
 
 
 @router.post('/', status_code=status.HTTP_201_CREATED, response_model=user_schema.User)
-def insert_transaction(tiles: List[tile_schema.Tile],  db: Session = Depends(get_db), token: str = Depends(authentication.oauth2_scheme)):
+def insert_transaction(tiles: List[tile_schema.TileInsert],  db: Session = Depends(get_db), token: str = Depends(authentication.oauth2_scheme)):
 
     token_data = check_credentials(token)
     user_exists = users_service.get_by_email(db, token_data.username)

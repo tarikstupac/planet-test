@@ -18,7 +18,7 @@ else:
 Base = declarative_base(engine)
 
 #define session
-SessionLocal = sessionmaker(autocommit=False, bind=engine)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 def get_db():
     db = SessionLocal()

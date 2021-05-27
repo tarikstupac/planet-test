@@ -37,7 +37,7 @@ def get_tiles_by_country(db: Session = Depends(get_db), skip:int = 0, limit: int
     return country_list
 
 @router.post("/", status_code=status.HTTP_201_CREATED, response_description="Successfully added tiles!")
-def insert_tiles(tiles: List[tile_schema.Tile], db: Session = Depends(get_db), token: str = Depends(authentication.oauth2_scheme)):
+def insert_tiles(tiles: List[tile_schema.TileInsert], db: Session = Depends(get_db), token: str = Depends(authentication.oauth2_scheme)):
     token_data = check_credentials(token)
     user = users_service.get_by_email(db, token_data.username)
     
@@ -113,12 +113,17 @@ def get_tiles_for_user_by_country(user_id: int, db: Session = Depends(get_db), t
     
     tiles_by_country = []
     distinct_countries = tiles_service.get_distinct_countries(db, user_id=user_id)
+    print(distinct_countries)
     if distinct_countries is None or len(distinct_countries) < 1:
          raise HTTPException(status_code=status.HTTP_200_OK, detail="No tiles found for user id or user with the id doesn't exist!")
     for country in distinct_countries:
+        print(country['country_id'])
         temp = country_service.get_by_id(db, country['country_id'])
         tile_list = tiles_service.get_tiles_by_user_country(db, user_id, temp.id)
+        print(tile_list)
         for tile in tile_list:
+            print('ENTERED FOR')
+            print(tile.id)
             tile.id = quadkey_parser.quadint_to_quadkey(tile.id)
         obj = {'id': temp.id, 'name' : temp.name,"tiles" : tile_list}
         tiles_by_country.append(obj)

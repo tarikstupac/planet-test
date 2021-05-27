@@ -14,7 +14,7 @@ def quadkey_to_quadint(quadkey):
 
 def quadint_to_quadkey(quadint):
     qi = c_ulonglong(quadint)
-    zoom = quadint & 0b11111
+    zoom = int(quadint) & 0b11111
     qk = create_string_buffer(31)
 
     for i in range(zoom):

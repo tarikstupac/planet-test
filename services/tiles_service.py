@@ -20,7 +20,7 @@ def get_number_of_tiles_by_country(db: Session, skip:int = 0, limit:int = 100):
         join(countries.Country).group_by(tiles.Tile.country_id, countries.Country.name).order_by(func.count(tiles.Tile.id).desc()).offset(skip).limit(limit).all()
     return result
 
-def insert_tiles(db: Session, tiles_schema: List[tile_schema.Tile]):
+def insert_tiles(db: Session, tiles_schema: List[tile_schema.TileInsert]):
     db_tiles = []
     for tile in tiles_schema:
         db_tile = tiles.Tile(
