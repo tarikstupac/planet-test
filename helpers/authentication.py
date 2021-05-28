@@ -10,7 +10,7 @@ import time
 SECRET_KEY = "396b67b31db57d4380e09cb08e5b2c435744110b3969b816a1f6e2f7b1099d42"
 REFRESH_KEY = "5af0e5f52cc3c21d3a6d3d34092c525fb9ccdae81e8dee0524e482cf7ed73c70"
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXIPRE_MINUTES = 2880
+ACCESS_TOKEN_EXIPRE_MINUTES = 2
 
 pwd_context = CryptContext(schemes=['bcrypt'], deprecated = "auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
