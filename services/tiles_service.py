@@ -47,7 +47,7 @@ def insert_tiles(db: Session, tiles_schema: List[tile_schema.TileInsert]):
 
 def update_tile_flag(db: Session, user_flag:str, user_id: int):
     db_tiles = get_tiles_by_user_id(db, user_id)
-    if len(db_tiles < 1):
+    if len(db_tiles) < 1 :
         return
     if db_tiles[0].user_flag == user_flag:
         return
