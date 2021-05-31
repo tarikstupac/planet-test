@@ -29,7 +29,6 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     else:
         expire = datetime.utcnow() + timedelta(minutes=15)
     to_encode.update({"exp": expire})
-    print(expire)
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
@@ -39,6 +38,8 @@ def decode_token(token: str = Depends(oauth2_scheme)):
     
 def create_refresh_token(data: dict):
     to_encode = data.copy()
+    curr_time = datetime.utcnow().timestamp()
+    to_encode.update({"time": curr_time})
     encoded_jwt = jwt.encode(to_encode, REFRESH_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
