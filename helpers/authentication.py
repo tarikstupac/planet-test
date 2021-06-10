@@ -10,7 +10,7 @@ import time
 SECRET_KEY = "396b67b31db57d4380e09cb08e5b2c435744110b3969b816a1f6e2f7b1099d42"
 REFRESH_KEY = "5af0e5f52cc3c21d3a6d3d34092c525fb9ccdae81e8dee0524e482cf7ed73c70"
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXIPRE_MINUTES = 2880
+ACCESS_TOKEN_EXIPRE_MINUTES = 2
 
 pwd_context = CryptContext(schemes=['bcrypt'], deprecated = "auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
@@ -29,7 +29,6 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     else:
         expire = datetime.utcnow() + timedelta(minutes=15)
     to_encode.update({"exp": expire})
-    print(expire)
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
@@ -39,6 +38,8 @@ def decode_token(token: str = Depends(oauth2_scheme)):
     
 def create_refresh_token(data: dict):
     to_encode = data.copy()
+    curr_time = datetime.utcnow().timestamp()
+    to_encode.update({"time": curr_time})
     encoded_jwt = jwt.encode(to_encode, REFRESH_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 

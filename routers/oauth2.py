@@ -88,9 +88,14 @@ def refresh_token(token: token_schema.Token, db: Session = Depends(get_db)):
 
         access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXIPRE_MINUTES)
         access_token = create_access_token(data={"sub":user.email}, expires_delta=access_token_expires)
+
+        refresh_token = create_refresh_token(data={"sub":user.email})
+        #add refresh token key to redis token_watcher and delete existing one
+        r.delete(f'{user.id}_refresh_token')
+        r.set(f'{user.id}_refresh_token', refresh_token)
         #add the new token to token watcher
         r.setex(f'{user.id}_access_token', access_token_expires, access_token)
-        return {"access_token": access_token, "token_type":"bearer", "refresh_token":token.refresh_token}
+        return {"access_token": access_token, "token_type":"bearer", "refresh_token":refresh_token}
     else:
         try:
             payload = decode_refresh_token(token=token.refresh_token)
@@ -107,8 +112,12 @@ def refresh_token(token: token_schema.Token, db: Session = Depends(get_db)):
         access_token = create_access_token(data={"sub":user.email}, expires_delta=access_token_expires)
         #add new token to token watcher
         r.setex(f'{user.id}_access_token', access_token_expires, access_token)
+        #create new refresh token and delete the old one
+        refresh_token = create_refresh_token(data={"sub":user.email})
+        r.delete(f'{user.id}_refresh_token')
+        r.set(f'{user.id}_refresh_token', refresh_token)
 
-        return {"access_token": access_token, "token_type": "bearer", "refresh_token": token.refresh_token}
+        return {"access_token": access_token, "token_type": "bearer", "refresh_token": refresh_token}
 
 
 @router.post('/forgotpassword', status_code=status.HTTP_200_OK, response_description="Reset link was sent to the entered e-mail.")
@@ -190,7 +199,7 @@ def logout(token: token_schema.Token, db: Session = Depends(get_db)):
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="User with the email doesn't exist.")
         #expire the token
         r.expire(f'{user.id}_access_token', timedelta(seconds=0))
-        r.expire(f'{user.id}_refresh_token', timedelta(seconds=0))
+        r.delete(f'{user.id}_refresh_token')
 
 @router.post('/contact', status_code=status.HTTP_201_CREATED, response_description="Your message was submitted successfully.")
 def contact(request: user_schema.UserContactForm):
